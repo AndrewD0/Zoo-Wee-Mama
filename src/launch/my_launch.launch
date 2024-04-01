@@ -1,3 +1,0 @@
-<launch>
-	<node pkg="Zoo-Wee-Mama" type="line_following.py" name="line_following" output="screen"/>
-</launch>
