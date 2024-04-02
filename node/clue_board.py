@@ -17,10 +17,20 @@ class Clueboard_detection:
         
         self.bridge = CvBridge() # CvBridge initialization
 
+        self.board = False
+        self.frame_counter = 1
+
+        # img = cv2.imread("/home/fizzer/ros_ws/src/Zoo-Wee-Mama/00.png")
+        # hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        # hsv_pixel =hsv[200, 200]
+        # print("HSV values of pixel at ({}, {}): H={}, S={}, V={}".format(100, 100, hsv_pixel[0], hsv_pixel[1], hsv_pixel[2]))
+        
     def hsv_callback(self, data):
         #variables
-        lower_blue = np.array([110, 50, 50])
-        upper_blue = np.array([130, 255, 150])
+        lower_blue = np.array([90, 50, 50])
+        upper_blue = np.array([130, 255, 255])
+
+        edge_blue = np.array([120, 255, 102])
 
         img_style = 'bgr8'
         
@@ -29,25 +39,40 @@ class Clueboard_detection:
         except CvBridgeError as e:
             print(e)
         
-        blur = cv2.blur(frame, (3, 3))
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         words = cv2.inRange(hsv, lower_blue, upper_blue)
+        blur = cv2.GaussianBlur(words, (3, 3), 0)
+        
+        blur_canny = cv2.GaussianBlur(hsv, (3, 3), 0)
+        canny = cv2.inRange(blur_canny, edge_blue, edge_blue)
+        edges = cv2.Canny(canny, 50, 150)
 
-        cv2.imshow("image",words)
+        if np.any(blur[300] == 255) and np.any(blur[485] == 255): # if white
+            self.board = True
+            self.frame_counter -= 1
+        else:
+            self.board = False
+
+        cv2.imshow("image",blur)
+        # h, w = blur.shape[:2]
+        # print(h)
+        # print(w)
         cv2.waitKey(2)
 
-        self.SLOT_query_camera(words)
+        self.SLOT_query_camera(frame)
 
-    def Clue_detection():
+    def edge_detection():
         pass
 
 
-    def SLOT_query_camera(self, words):
-        template_path = "/home/fizzer/Downloads/0.png"
+    def SLOT_query_camera(self, frame):
 
-        #TODO run SIFT on the captured frame
+        template_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/000.png"
         img = cv2.imread(template_path)
-        self.feacture_match(words, img)
+
+        if self.board and self.frame_counter == 0:
+            self.feacture_match(frame, img)
+            self.frame_counter = 5
 
     def feacture_match(self, frame, img):
         sift = cv2.SIFT_create()
@@ -60,7 +85,7 @@ class Clueboard_detection:
 
         kp_grayframe, desc_grayframe = sift.detectAndCompute(frame, None)
 
-        draw = cv2.drawKeypoints(frame, kp_grayframe,frame)
+        # draw = cv2.drawKeypoints(frame, kp_grayframe,frame)
         # cv2.imshow("draw",draw)
 
         matches = flann.knnMatch(desc_image, desc_grayframe, k=2)
@@ -76,18 +101,20 @@ class Clueboard_detection:
         train_pts = np.float32([kp_grayframe[m.trainIdx].pt for m in good_points]).reshape(-1, 1, 2)
         
         try:
-            print("!!!!")
             matrix, mask = cv2.findHomography(query_pts, train_pts, cv2.RANSAC, 5.0)
             matches_mask = mask.ravel().tolist()
 
             # Perspective transform
-            h, w= img.shape
+            h, w, _ = img.shape
             pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
             dst = cv2.perspectiveTransform(pts, matrix)
 
+            # print("!!!!")
             homography = cv2.polylines(frame, [np.int32(dst)], True, (255, 0, 0), 3)
             cv2.imshow("Homography", homography)
-        except:
+            cv2.waitKey(2)
+        except Exception as e:
+            rospy.logerr("Homography error: %s", str(e))
             homography = frame
 
 def main():
