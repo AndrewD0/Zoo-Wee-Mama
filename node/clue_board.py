@@ -19,6 +19,7 @@ class Clueboard_detection:
 
         self.board = False
         self.frame_counter = 1
+        self.blur = []
 
         # img = cv2.imread("/home/fizzer/ros_ws/src/Zoo-Wee-Mama/00.png")
         # hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -30,7 +31,7 @@ class Clueboard_detection:
         lower_blue = np.array([90, 50, 50])
         upper_blue = np.array([130, 255, 255])
 
-        edge_blue = np.array([120, 255, 102])
+        # edge_blue = np.array([120, 255, 102])
 
         img_style = 'bgr8'
         
@@ -41,28 +42,22 @@ class Clueboard_detection:
         
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         words = cv2.inRange(hsv, lower_blue, upper_blue)
-        blur = cv2.GaussianBlur(words, (3, 3), 0)
+        self.blur = cv2.GaussianBlur(words, (3, 3), 0)
         
-        blur_canny = cv2.GaussianBlur(hsv, (3, 3), 0)
-        canny = cv2.inRange(blur_canny, edge_blue, edge_blue)
-        edges = cv2.Canny(canny, 50, 150)
+        # blur_canny = cv2.GaussianBlur(hsv, (3, 3), 0)
+        # canny = cv2.inRange(blur_canny, edge_blue, edge_blue)
+        # edges = cv2.Canny(canny, 50, 150)
 
-        if np.any(blur[300] == 255) and np.any(blur[485] == 255): # if white
+        if np.any(self.blur[300] == 255) and np.any(self.blur[485] == 255): # if white
             self.board = True
             self.frame_counter -= 1
         else:
             self.board = False
 
-        cv2.imshow("image",blur)
-        # h, w = blur.shape[:2]
-        # print(h)
-        # print(w)
+        cv2.imshow("image",self.blur)
         cv2.waitKey(2)
 
         self.SLOT_query_camera(frame)
-
-    def edge_detection():
-        pass
 
 
     def SLOT_query_camera(self, frame):
@@ -109,13 +104,38 @@ class Clueboard_detection:
             pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
             dst = cv2.perspectiveTransform(pts, matrix)
 
-            # print("!!!!")
             homography = cv2.polylines(frame, [np.int32(dst)], True, (255, 0, 0), 3)
-            cv2.imshow("Homography", homography)
+            # cv2.imshow("Homography", homography)
+            # cv2.waitKey(2)
+
+            print(dst)
+
+           # Get the bounding box of the transformed points
+            min_x = max(int(np.min(dst[:, 0, 0])), 0)
+            min_y = max(int(np.min(dst[:, 0, 1])), 0)
+            max_x = min(int(np.max(dst[:, 0, 0])), frame.shape[1])
+            max_y = min(int(np.max(dst[:, 0, 1])), frame.shape[0])
+
+            # Crop the region from the homography image based on the adjusted coordinates
+            cropped_roi = self.blur[min_y:max_y, min_x:max_x]
+            cropped_roi = cv2.resize(cropped_roi, (1280, 720))
+
+            # Save the cropped ROI as a new image
+            cv2.imwrite("cropped_roi.jpg", cropped_roi)
+
+            # Display the cropped ROI (optional)
+            cv2.imshow("Cropped ROI", cropped_roi)
             cv2.waitKey(2)
+
+            self.character_trim(cropped_roi)
+
         except Exception as e:
             rospy.logerr("Homography error: %s", str(e))
             homography = frame
+            
+    def character_trim(self, cropped):
+        pass
+
 
 def main():
 
