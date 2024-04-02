@@ -6,7 +6,6 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from geometry_msgs.msg import Twist
 import numpy as np
-# from std_msgs.msg import Time
 from rosgraph_msgs.msg import Clock
 from std_msgs.msg import String
 from gazebo_msgs.msg import ModelState
@@ -75,11 +74,11 @@ class Imag_Convert:
         soil = cv2.inRange(hsv, lower_soil, upper_soil)
         # res = cv2.bitwise_and(frame, frame, mask= mask)
 
-        cv2.imshow("image",gray)
+        # cv2.imshow("image",gray)
         linear_vel, angular_vel = self.frame_analysis(gray, frame)  # Calculate linear and angular velocity
         self.vel_control(linear_vel, angular_vel) # Publish velocities
 
-        cv2.waitKey(2)
+        # cv2.waitKey(2)
 
 
     def frame_analysis(self, binary, frame):
