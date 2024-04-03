@@ -14,7 +14,7 @@ from gazebo_msgs.srv import SetModelState
 class Imag_Convert:
 
     def __init__(self):
-        self.image = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.hsv_callback, queue_size=3) # Image subscriber
+        self.image = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=3) # Image subscriber
         self.clock = rospy.Subscriber('/clock', Clock, self.clock_callback, queue_size=10)
         self.control = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=3) # Velocity subscriber
         self.scoretracker = rospy.Publisher('/score_tracker', String, queue_size=10)
@@ -38,8 +38,8 @@ class Imag_Convert:
     def callback(self, data):
 
         # variables
-        binary_low = 90 # threshold to be compared with
-        binary_high =255 #set to if > thresh
+        binary_low = (235,235,235) # threshold to be compared with
+        binary_high =(255,255,255) #set to if > thresh
         img_style = 'bgr8'
         
         try:
@@ -47,7 +47,7 @@ class Imag_Convert:
         except CvBridgeError as e:
             print(e)
         gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY) # Convert video to grayscale
-        _, binary = cv2.threshold(gray, binary_low, binary_high, cv2.THRESH_BINARY) # Convert to binary
+        binary = cv2.inRange(frame, binary_low,binary_high) # Convert to binary
         
         cv2.imshow("image",binary)
         linear_vel, angular_vel = self.frame_analysis(binary, frame)  # Calculate linear and angular velocity
@@ -74,6 +74,11 @@ class Imag_Convert:
         soil = cv2.inRange(hsv, lower_soil, upper_soil)
         # res = cv2.bitwise_and(frame, frame, mask= mask)
 
+        cv2.imshow("image2", gray)
+        cv2.imshow("image1", hsv)
+
+        cv2.waitKey(2)
+
         # cv2.imshow("image",gray)
         linear_vel, angular_vel = self.frame_analysis(gray, frame)  # Calculate linear and angular velocity
         self.vel_control(linear_vel, angular_vel) # Publish velocities
@@ -88,27 +93,29 @@ class Imag_Convert:
         width= frame.shape[1] 
         length = len(last_line)
         road = 255 # look for white
+
+        angularZ = 0
+        linearX = 0.2
         
-        # Find the middle of the road
-        if np.any(last_line == road):
-            first = last_line.tolist().index(road)
-            last = length -1 - last_line[::-1].tolist().index(road)
-            mid = (first + last) / 2
-            self.position = mid
-        else:
-            mid = self.position
+        height, width, _ = frame.shape
+        roi_height = int(height * 0.99999) 
+
+        cropped_mask = binary[roi_height:height, :]
+
+        center = cropped_mask.shape[1] // 2
+
+        indices_high = np.where(cropped_mask > 0)
+
+        if(indices_high[1].size > 0):
+            first_x = min(indices_high[1])
+            last_x = max(indices_high[1])
+            average = int((first_x+last_x)/2)
+
+            error = average - center
+            
+            angularZ = -0.02*error
         
-        # Set angular velocity using PID
-        default_linear_vel = 0.2
-        error = width / 2 - mid
-        factor = 0.02
-        # if error <= 0:
-        #     linear_vel =default_linear_vel * 2
-        #     print("accelerating!!!")
-        # else:
-        linear_vel = default_linear_vel
-        #     print("Tracing!!!")
-        return linear_vel, error * factor
+        return linearX, angularZ
         
     def vel_control(self, linear, angular):
         move = Twist()

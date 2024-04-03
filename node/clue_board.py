@@ -53,7 +53,7 @@ class Clueboard_detection:
         else:
             self.board = False
 
-        cv2.imshow("image",self.blur)
+        # cv2.imshow("image",self.blur)
         cv2.waitKey(2)
 
         self.SLOT_query_camera(frame)
@@ -61,7 +61,7 @@ class Clueboard_detection:
 
     def SLOT_query_camera(self, frame):
 
-        template_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/000.png"
+        template_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Zoo-Wee-Mama/000.png"
         img = cv2.imread(template_path)
 
         if self.board and self.frame_counter == 0:
@@ -105,7 +105,7 @@ class Clueboard_detection:
             dst = cv2.perspectiveTransform(pts, matrix)
 
             homography = cv2.polylines(frame, [np.int32(dst)], True, (255, 0, 0), 3)
-            cv2.imshow("Homography", homography)
+            #cv2.imshow("Homography", homography)
             cv2.waitKey(2)
 
            # Get the bounding box of the transformed points
@@ -147,7 +147,7 @@ class Clueboard_detection:
             
             if w<650 and w>55 and h<650 and h>55:
                 cv2.rectangle(trim_img, (x, y), (x + w, y + h), (255, 0, 255), 2)
-                cv2.imshow("contour", trim_img)
+                #cv2.imshow("contour", trim_img)
                 cv2.waitKey(2)
 
                 string_img = trim_img[y:y+h, x:x+w]
