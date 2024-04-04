@@ -106,6 +106,11 @@ class robotController:
             if(rospy.get_time() > self.previousTime+0.75):
                 if(functions.pedestrianCrossed(frame, self.previousFrame) == True):
                     self.stateTracker.setState('ROAD')
+        
+        cv2.imshow("road", roadHighlight)
+        cv2.imshow("white", whiteHighlight)
+
+        cv2.waitKey(2)
 
         self.previousFrame = frame
 

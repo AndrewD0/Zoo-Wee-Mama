@@ -26,6 +26,7 @@ class velocityController:
     def lineFollower(self, image):
         # Variables
         proportionalConstant = 0.02
+        derivativeConstant = 0.1
 
         cutoffFrame = 0.999999999
         height, width = image.shape
@@ -44,10 +45,6 @@ class velocityController:
             self.error = average - center
             
             self.angularZ = -proportionalConstant*self.error
-        
-        cv2.imshow("image", image)
-        cv2.waitKey(2)
-
         
         self.velocityPublish(self.linearX, self.angularZ)
     
