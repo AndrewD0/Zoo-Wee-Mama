@@ -14,7 +14,7 @@ from gazebo_msgs.srv import SetModelState
 class Imag_Convert:
 
     def __init__(self):
-        self.image = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.callback, queue_size=3) # Image subscriber
+        self.image = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.hsv_callback, queue_size=3) # Image subscriber
         self.clock = rospy.Subscriber('/clock', Clock, self.clock_callback, queue_size=10)
         self.control = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=3) # Velocity subscriber
         self.scoretracker = rospy.Publisher('/score_tracker', String, queue_size=10)
@@ -72,12 +72,7 @@ class Imag_Convert:
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         gray = cv2.inRange(hsv, lower_gray, upper_gray)
         soil = cv2.inRange(hsv, lower_soil, upper_soil)
-        # res = cv2.bitwise_and(frame, frame, mask= mask)
 
-        cv2.imshow("image2", gray)
-        cv2.imshow("image1", hsv)
-
-        cv2.waitKey(2)
 
         # cv2.imshow("image",gray)
         linear_vel, angular_vel = self.frame_analysis(gray, frame)  # Calculate linear and angular velocity
@@ -89,7 +84,7 @@ class Imag_Convert:
     def frame_analysis(self, binary, frame):
 
         #variables
-        last_line = binary[-1] # last line of the frame in pixel
+        last_line = binary[715] # last line of the frame in pixel
         width= frame.shape[1] 
         length = len(last_line)
         road = 255 # look for white
@@ -149,7 +144,7 @@ def main():
 
     image_processor = Imag_Convert()
     rospy.init_node('image_convert_node', anonymous=True) # Initialize node
-    rospy.sleep(1) 
+    # rospy.sleep(1) 
 
     position = [5.5, 5, 0.2, 0, 0, 1.57, 0] # "-x 5.5 -y 2.5 -z 0.2 -R 0.0 -P 0.0 -Y -1.57"
     # spawn_position(position)

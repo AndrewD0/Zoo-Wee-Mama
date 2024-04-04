@@ -14,6 +14,10 @@ class Clueboard_detection:
         self.scoretracker = rospy.Publisher('/score_tracker', String, queue_size=10)
         
         self.bridge = CvBridge() # CvBridge initialization
+
+        self.board = False
+        self.frame_counter = 1
+        self.blur = []
         self.board_count = 0
 
         # img = cv2.imread("/home/fizzer/ros_ws/src/Zoo-Wee-Mama/00.png")
@@ -25,57 +29,44 @@ class Clueboard_detection:
         #variables
         lower_blue = np.array([100, 50, 50])
         upper_blue = np.array([130, 255, 255])
+
+        # edge_blue = np.array([120, 255, 102])
+
         img_style = 'bgr8'
         
         try:
             frame = self.bridge.imgmsg_to_cv2(data, img_style) #Convert ROS images to OpenCV images
         except CvBridgeError as e:
             print(e)
-
+        
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
-        # blur = cv2.GaussianBlur(mask_blue, (3, 3), 0)
-
-        contours, _ = cv2.findContours(mask_blue, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        rectangle = []
-        min_area = 16000
-        max_area = 17000
-        # trim = mask_blue.copy()
-        # cv2.imshow("frame", blur)
-        # cv2.waitKey(2)
-
-        for contour in contours:
-            perimeter = cv2.arcLength(contour, True)
-            approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
-            if len(approx) == 4 and cv2.contourArea(contour) > min_area and cv2.contourArea(contour) < max_area and cv2.isContourConvex(approx):
-                x, y, w, h = cv2.boundingRect(contour)
-                trim = frame[y: y+h, x: x+w]
-                trim = cv2.cvtColor(trim, cv2.COLOR_BGR2GRAY)
-                # trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_LANCZOS4)
-                self.DO_SIFT(trim)
-                
-                rectangle.append(approx)
-        con = frame.copy()
-        for contour in rectangle:
-            cv2.drawContours(con, [contour], -1, (0, 255, 0), 2)
-            
-        cv2.imshow("..", con)
-        cv2.waitKey(2)
+        words = cv2.inRange(hsv, lower_blue, upper_blue)
+        self.blur = cv2.GaussianBlur(words, (3, 3), 0)
         
-        
-        
+        # blur_canny = cv2.GaussianBlur(hsv, (3, 3), 0)
+        # canny = cv2.inRange(blur_canny, edge_blue, edge_blue)
+        # edges = cv2.Canny(canny, 50, 150)
 
+        if np.any(self.blur[320] == 255) and np.any(self.blur[485] == 255): # if white
+            self.board = True
+            self.frame_counter -= 1
+        else:
+            self.board = False
 
-    def DO_SIFT(self, frame):
-
-        template_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/0000.png"
-        img = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
-
-        cv2.imshow("gray", frame)
+        cv2.imshow("image",self.blur)
         cv2.waitKey(2)
 
-        self.feacture_match(frame, img)
+        self.SLOT_query_camera(frame)
+
+
+    def SLOT_query_camera(self, frame):
+
+        template_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/000.png"
+        img = cv2.imread(template_path)
+
+        if self.board and self.frame_counter == 0:
+            self.feacture_match(frame, img)
+            self.frame_counter = 5
 
     def feacture_match(self, frame, img):
         sift = cv2.SIFT_create()
@@ -87,6 +78,9 @@ class Clueboard_detection:
         flann = cv2.FlannBasedMatcher(index_params, search_params) # find matching features
 
         kp_grayframe, desc_grayframe = sift.detectAndCompute(frame, None)
+
+        # draw = cv2.drawKeypoints(frame, kp_grayframe,frame)
+        # cv2.imshow("draw",draw)
 
         matches = flann.knnMatch(desc_image, desc_grayframe, k=2)
         good_points = []
