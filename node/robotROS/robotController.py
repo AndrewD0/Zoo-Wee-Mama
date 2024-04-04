@@ -85,7 +85,7 @@ class robotController:
         pinkHighlight = cv2.inRange(frame, lowerPink, upperPink)
         redHighlight = cv2.inRange(frame, lowerRed, upperRed)
 
-        self.stateTracker.findState(pinkHighlight, redHighlight)
+        # self.stateTracker.findState(pinkHighlight, redHighlight)
 
         print(self.stateTracker.getState())
 
