@@ -22,7 +22,6 @@ class stateTracker:
     
         redHigh = np.where(croppedRed > 0)
 
-
         # I want to change this implementation.
 
         redHigh = np.where(croppedRed > 0)
