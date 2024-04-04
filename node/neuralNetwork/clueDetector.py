@@ -133,86 +133,85 @@ class clueDetector:
             # rospy.logerr("Homography error: %s", str(e))
             # homography = frame
             pass
-
-    def words_trim(self, crop):
-        print("entering")
-        lower_blue = np.array([90, 50, 50])
-        upper_blue = np.array([130, 255, 255])
-        space = 100
-
-        hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
-        cropped = cv2.inRange(hsv, lower_blue, upper_blue)
-        
-
-        cv2.imshow("cropp", cropped)
-        cv2.waitKey(2)
-        print("print")
-
-        h, w = cropped.shape
-        num = int(w//space)
-
-        top = cv2.resize(cropped[0: 200, 600: 1250], (1280, 720), interpolation=cv2.INTER_CUBIC)
-        bottom = cv2.resize(cropped[400:700, 0: 1250], (1280, 720), interpolation=cv2.INTER_CUBIC)
-
-        
-        cv2.imshow("top", top)
-        cv2.waitKey(2)
-        # cv2.imshow("bot", bottom)
-        # cv2.waitKey(2)
-
-            
     # def words_trim(self, crop):
-    #     print("enter words_trim")
+    #     # print("entering")
     #     lower_blue = np.array([90, 50, 50])
     #     upper_blue = np.array([130, 255, 255])
-        
+    #     space = 100
+
     #     hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
     #     cropped = cv2.inRange(hsv, lower_blue, upper_blue)
         
-    #     # cv2.imshow("cropp", cropped)
-    #     # cv2.waitKey(2)
-        
-    #     contours, _ = cv2.findContours(cropped, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        
-    #     trim_img = cropped.copy()
-    #     iteration = 0
-    #     for contour in contours:
-            
-    #         x, y, w, h = cv2.boundingRect(contour)
-    #         w_org = 100
-    #         if w<650 and w>55 and h<650 and h>55:
-    #             if w < 100:
-    #                 w_org = w
-    #                 w = 100
-    #             cv2.rectangle(trim_img, (x-1, y-1), (x+1 + w, y+1 + h), (255, 0, 255), 1)
-    #             cv2.imshow("char", trim_img)
-    #             cv2.waitKey(2)
 
-    #             string_img = trim_img[(y-1):(y+h), (x-1):(x+w)]
-    #             self.character_trim(string_img, iteration, w_org)
-    #             iteration += 1
+    #     cv2.imshow("cropped", cropped)
+    #     cv2.waitKey(2)
+    #     print("print")
 
-    # def character_trim(self, string_img, iteration, w_org):
-    #     h, w = string_img.shape
-    #     space = 100
-    #     folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
-
-    #     space = 100
-
+    #     h, w = cropped.shape
     #     num = int(w//space)
-        
-    #     for character in range(num):
-    #         character_img = string_img[0:h, space * character : space * (character+1)]
-    #         file_name = str(self.board_count) + str(iteration) + str(character) + '.jpg'
-    #         full_path = folder_path + file_name
-    #         # character_blur = cv2.GaussianBlur(character_img, (3, 3), 0)
-    #         # print(character_img.shape[0], character_img.shape[1])
-    #         mask = np.zeros_like(character_img)
-    #         cv2.rectangle(mask, (w_org, 0), (w, h), (255, 255, 255), -1)
-    #         character_img[mask == 255] = 0
-    #         character_resize = cv2.resize(character_img, (100, 110))
 
-    #         cv2.imwrite(full_path, character_resize)
+    #     top = cv2.resize(cropped[0: 200, 600: 1250], (1280, 720), interpolation=cv2.INTER_CUBIC)
+    #     bottom = cv2.resize(cropped[400:700, 0: 1250], (1280, 720), interpolation=cv2.INTER_CUBIC)
+
+        
+    #     cv2.imshow("top", top)
+    #     cv2.waitKey(2)
+    #     # cv2.imshow("bot", bottom)
+    #     # cv2.waitKey(2)
+
+            
+    def words_trim(self, crop):
+        print("enter words_trim")
+        lower_blue = np.array([90, 50, 50])
+        upper_blue = np.array([130, 255, 255])
+        
+        hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
+        cropped = cv2.inRange(hsv, lower_blue, upper_blue)
+        
+        # cv2.imshow("cropp", cropped)
+        # cv2.waitKey(2)
+        
+        contours, _ = cv2.findContours(cropped, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        
+        trim_img = cropped.copy()
+        iteration = 0
+        for contour in contours:
+            
+            x, y, w, h = cv2.boundingRect(contour)
+            w_org = 100
+            if w<650 and w>55 and h<650 and h>55:
+                if w < 100:
+                    w_org = w
+                    w = 100
+                cv2.rectangle(trim_img, (x-1, y-1), (x+1 + w, y+1 + h), (255, 0, 255), 1)
+                cv2.imshow("char", trim_img)
+                cv2.waitKey(2)
+
+                string_img = trim_img[(y-1):(y+h), (x-1):(x+w)]
+                self.character_trim(string_img, iteration, w_org)
+                iteration += 1
+
+    def character_trim(self, string_img, iteration, w_org):
+        h, w = string_img.shape
+        space = 100
+        folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
+
+        space = 100
+
+        num = int(w//space)
+        
+        for character in range(num):
+            character_img = string_img[0:h, space * character : space * (character+1)]
+            file_name = str(self.board_count) + str(iteration) + str(character) + '.jpg'
+            full_path = folder_path + file_name
+            # character_blur = cv2.GaussianBlur(character_img, (3, 3), 0)
+            # print(character_img.shape[0], character_img.shape[1])
+            mask = np.zeros_like(character_img)
+            cv2.rectangle(mask, (w_org, 0), (w, h), (255, 255, 255), -1)
+            character_img[mask == 255] = 0
+            character_resize = cv2.resize(character_img, (100, 110))
+
+            cv2.imwrite(full_path, character_resize)
 
 
 def main():
