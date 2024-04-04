@@ -9,6 +9,7 @@ class stateTracker:
 
         self.markersCounter = 0
         self.cluesCounter = 0
+        self.pedestrianReached = False
 
 
     def findState(self, pinkImage, redImage):
@@ -18,13 +19,18 @@ class stateTracker:
 
         croppedPink = pinkImage[roiHeight:height, :]
         croppedRed = redImage[roiHeight:height, :]
-
-        #pinkHigh = 
-
-
-
-
     
+        redHigh = np.where(croppedRed > 0)
+
+
+        # I want to change this implementation.
+
+        redHigh = np.where(croppedRed > 0)
+
+        if(redHigh[1].size > 0 and self.pedestrianReached == False):
+            self.setState('PEDESTRIAN')
+            self.pedestrianReached = True
+
     def getState(self):
         return self.robotState
     

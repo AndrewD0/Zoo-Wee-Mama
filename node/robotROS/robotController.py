@@ -84,10 +84,15 @@ class robotController:
 
         self.stateTracker.findState(pinkHighlight, redHighlight)
 
+        print(self.stateTracker.getState())
+
         if(self.stateTracker.getState() == 'ROAD'):
             self.velocityController.lineFollower(roadHighlight)
         
-        cv2.imshow("image", pinkHighlight)
+        elif(self.stateTracker.getState() == 'PEDESTRIAN'):
+            self.velocityController.velocityPublish(0,0)
+        
+        cv2.imshow("image", redHighlight)
         cv2.waitKey(2)
 
 def spawnPosition(self, position):
