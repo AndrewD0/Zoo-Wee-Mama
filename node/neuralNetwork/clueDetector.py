@@ -53,7 +53,7 @@ class clueDetector:
                 board_blue.append(approx)
         
             
-        cv2.imshow("draw", frame)
+        #cv2.imshow("draw", frame)
         cv2.waitKey(2)
         
         
@@ -65,7 +65,7 @@ class clueDetector:
         template_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/000.png"
         img = cv2.imread(template_path)
 
-        cv2.imshow("gray", frame)
+        #cv2.imshow("gray", frame)
         cv2.waitKey(2)
 
         self.feacture_match(frame, img)
@@ -142,7 +142,7 @@ class clueDetector:
         # gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
         # _, cropped = cv2.threshold(gray, 110, 255, cv2.THRESH_BINARY)
         
-        cv2.imshow("cropp", cropped)
+        #cv2.imshow("cropp", cropped)
         cv2.waitKey(2)
         
         contours, _ = cv2.findContours(cropped, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -156,7 +156,7 @@ class clueDetector:
             
             if w<650 and w>55 and h<650 and h>55:
                 cv2.rectangle(trim_img, (x-1, y-1), (x+1 + w, y+1 + h), (255, 0, 255), 1)
-                cv2.imshow("char", trim_img)
+                #cv2.imshow("char", trim_img)
                 cv2.waitKey(2)
 
                 string_img = trim_img[(y-1):(y+h), (x-1):(x+w)]

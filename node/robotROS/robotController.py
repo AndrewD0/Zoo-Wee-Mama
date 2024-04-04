@@ -13,6 +13,8 @@ from gazebo_msgs.srv import SetModelState
 from velocityController import velocityController
 from stateTracker import stateTracker
 
+from robotFunctions import functions
+
 class robotController:
 
     def __init__(self):
@@ -28,6 +30,8 @@ class robotController:
         
         self.bridge = CvBridge() # CvBridge initialization
         self.previousFrame = np.zeros((720,1280,3), dtype = np.uint8) # Creating a variable that stores the previous frame
+        self.previousTime = 0
+        self.prevTimeCounter = 0
 
     
     def clockCallback(self, data):
@@ -94,13 +98,14 @@ class robotController:
         
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
-            frameDifference = cv2.absdiff(frame, self.previousFrame)
-            frameGray = cv2.cvtColor(frameDifference, cv2.COLOR_BGR2GRAY)
-            _, binaryDifference = cv2.threshold(frameGray, 50, 255, cv2.THRESH_BINARY)
-
-        cv2.imshow("frame", frame)
-        cv2.imshow("binary", binaryDifference)
-        cv2.waitKey(2)
+            
+            if(self.prevTimeCounter == 0):
+                self.previousTime = rospy.get_time()
+                self.prevTimeCounter = 1
+            
+            if(rospy.get_time() > self.previousTime+0.75):
+                if(functions.pedestrianCrossed(frame, self.previousFrame) == True):
+                    self.stateTracker.setState('ROAD')
 
         self.previousFrame = frame
 

@@ -19,13 +19,8 @@ class stateTracker:
 
         croppedPink = pinkImage[roiHeight:height, :]
         croppedRed = redImage[roiHeight:height, :]
-
-        
     
         redHigh = np.where(croppedRed > 0)
-
-        redHigh = np.where(croppedRed > 0)
-
         if(redHigh[1].size > 0 and self.pedestrianReached == False):
             self.setState('PEDESTRIAN')
             self.pedestrianReached = True
