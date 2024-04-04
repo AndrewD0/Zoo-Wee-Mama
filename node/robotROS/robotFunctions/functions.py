@@ -22,6 +22,3 @@ def pedestrianCrossed(frame, previousFrame):
         return True
     else:
         return False
-
-def robotAlign(mask):
-    
