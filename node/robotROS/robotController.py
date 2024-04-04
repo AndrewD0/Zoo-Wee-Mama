@@ -27,6 +27,9 @@ class robotController:
         self.stateTracker = stateTracker()
         
         self.bridge = CvBridge() # CvBridge initialization
+
+        self.previousFrame = np.zeros((720,1280,3), dtype = np.uint8)
+
     
     def clockCallback(self, data):
         # Start timer
@@ -84,16 +87,33 @@ class robotController:
 
         # self.stateTracker.findState(pinkHighlight, redHighlight)
 
-        # print(self.stateTracker.getState())
+        print(self.stateTracker.getState())
 
-        # if(self.stateTracker.getState() == 'ROAD'):
-        self.velocityController.lineFollower(roadHighlight)
+        print(frame.dtype)
+        print(self.previousFrame.dtype)
+
+        if(self.stateTracker.getState() == 'ROAD'):
+            self.velocityController.lineFollower(roadHighlight)
         
-        # elif(self.stateTracker.getState() == 'PEDESTRIAN'):
-            # self.velocityController.velocityPublish(0,0)
+        elif(self.stateTracker.getState() == 'PEDESTRIAN'):
+            self.velocityController.velocityPublish(0,0)
+            frameDifference = cv2.absdiff(frame, self.previousFrame)
+            frameGray = cv2.cvtColor(frameDifference, cv2.COLOR_BGR2GRAY)
+            _, binaryDifference = cv2.threshold(frameGray, 50, 255, cv2.THRESH_BINARY)
+
+            kernelSize = 3
+            kernel = np.ones((kernelSize, kernelSize), np.uint8)
+            binaryDifference = cv2.dilate(binaryDifference, kernel, iterations = 3)
         
-        # cv2.imshow("image", redHighlight)
-        # cv2.waitKey(2)
+        contours, _ = cv2.findContours(binaryDifference, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        cv2.drawContours(frame, contours, -1, (0,255,0), 2)
+
+        cv2.imshow("image", frame)
+
+        cv2.waitKey(2)
+
+        self.previousFrame = frame
 
 def spawnPosition(self, position):
     msg = ModelState()
