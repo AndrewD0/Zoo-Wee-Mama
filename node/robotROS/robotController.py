@@ -43,7 +43,8 @@ class robotController:
         elif (rospy.get_time() == duration):
             self.scoretracker.publish(msgStop)
 
-def callback(self, data):
+
+    def callback(self, data):
         # Threshold variables
 
         # Detecting white
