@@ -33,11 +33,13 @@ class clueDetector:
 
         contours, _ = cv2.findContours(mask_blue, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        board_blue = []
-        min_area = 20000
-        max_area = 22000
+        # board_blue = []
+        min_area = 21000 # <22000
+        max_area = 23000
 
         # con = frame.copy()
+        cv2.imshow("draw", frame)
+        cv2.waitKey(2)
 
         for contour in contours:
             perimeter = cv2.arcLength(contour, True)
@@ -46,15 +48,14 @@ class clueDetector:
                 x, y, w, h = cv2.boundingRect(contour)
                 trim = frame[y: y+h, x: x+w]
                 # trim = cv2.cvtColor(trim, cv2.COLOR_BGR2GRAY)
-                trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_LANCZOS4)
+                trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
                 self.DO_SIFT(trim)
                 # cv2.drawContours(con, [contour], -1, (0, 255, 0), 2)
                 
-                board_blue.append(approx)
+                # board_blue.append(approx)
         
             
-        cv2.imshow("draw", frame)
-        cv2.waitKey(2)
+        
         
         
         
@@ -124,13 +125,33 @@ class clueDetector:
             # cv2.imshow("Cropped ROI", cropped_roi)
             # cv2.waitKey(2)
 
-            self.words_trim(cropped_roi)
+            self.word_trim(cropped_roi)
             self.board_count +=1
 
         except Exception as e:
             # rospy.logerr("Homography error: %s", str(e))
             # homography = frame
             pass
+    def word_trim(self, crop):
+        lower_blue = np.array([90, 50, 50])
+        upper_blue = np.array([130, 255, 255])
+        space = 100
+
+        hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
+        cropped = cv2.inRange(hsv, lower_blue, upper_blue)
+
+        h, w = cropped.shape
+        num = int(w//space)
+
+        top = cropped[0: 200, 600: w]
+        bottom = cropped[400:700, 0, w]
+
+        cv2.imshow("cropped", cropped)
+        cv2.imshow("top", top)
+        cv2.waitKey(2)
+        cv2.imshow("bot", bottom)
+        cv2.waitKey(2)
+
             
     def words_trim(self, crop):
         lower_blue = np.array([90, 50, 50])
@@ -153,25 +174,25 @@ class clueDetector:
         for contour in contours:
             
             x, y, w, h = cv2.boundingRect(contour)
-            
+            w_org = 100
             if w<650 and w>55 and h<650 and h>55:
-                cv2.rectangle(trim_img, (x-1, y-1), (x+1 + w, y+1 + h), (255, 0, 255), 1)
-                cv2.imshow("char", trim_img)
-                cv2.waitKey(2)
+                if w < 100:
+                    w_org = w
+                    w = 100
+                # cv2.rectangle(trim_img, (x-1, y-1), (x+1 + w, y+1 + h), (255, 0, 255), 1)
+                # cv2.imshow("char", trim_img)
+                # cv2.waitKey(2)
 
                 string_img = trim_img[(y-1):(y+h), (x-1):(x+w)]
-                self.character_trim(string_img, iteration)
+                self.character_trim(string_img, iteration, w_org)
                 iteration += 1
 
-    def character_trim(self, string_img, iteration):
+    def character_trim(self, string_img, iteration, w_org):
         h, w = string_img.shape
         space = 100
         folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
 
-        if w < space:
-            space = w
-        else: 
-            space = 100
+        space = 100
 
         num = int(w//space)
         
@@ -179,9 +200,14 @@ class clueDetector:
             character_img = string_img[0:h, space * character : space * (character+1)]
             file_name = str(self.board_count) + str(iteration) + str(character) + '.jpg'
             full_path = folder_path + file_name
-            character_img = cv2.GaussianBlur(character_img, (3, 3), 0)
-            # character_img = cv2.resize(character_img, (100, 100))
-            cv2.imwrite(full_path, character_img)
+            # character_blur = cv2.GaussianBlur(character_img, (3, 3), 0)
+            # print(character_img.shape[0], character_img.shape[1])
+            mask = np.zeros_like(character_img)
+            cv2.rectangle(mask, (w_org, 0), (w, h), (255, 255, 255), -1)
+            character_img[mask == 255] = 0
+            character_resize = cv2.resize(character_img, (100, 110))
+
+            cv2.imwrite(full_path, character_resize)
 
 
 def main():
