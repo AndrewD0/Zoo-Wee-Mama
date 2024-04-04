@@ -19,10 +19,10 @@ class stateTracker:
 
         croppedPink = pinkImage[roiHeight:height, :]
         croppedRed = redImage[roiHeight:height, :]
+
+        
     
         redHigh = np.where(croppedRed > 0)
-
-        # I want to change this implementation.
 
         redHigh = np.where(croppedRed > 0)
 
