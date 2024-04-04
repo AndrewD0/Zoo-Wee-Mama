@@ -1,5 +1,4 @@
 <launch>
-	<node pkg="Zoo-Wee-Mama" type="line_following.py" name="line_following" output="screen"/>
-	<node pkg="Zoo-Wee-Mama" type="clue_board.py" name="clue_board" output="screen"/>
-
+	<node pkg="Zoo-Wee-Mama" type="robotController.py" name="robot_brain" output="screen"/>
+	<node pkg="Zoo-Wee-Mama" type="clueDetector.py" name="clue_board" output="screen"/>
 </launch>
