@@ -43,7 +43,7 @@ class robotController:
         elif (rospy.get_time() == duration):
             self.scoretracker.publish(msgStop)
 
-    def callback(self, data):
+def callback(self, data):
         # Threshold variables
 
         # Detecting white
@@ -85,7 +85,7 @@ class robotController:
         pinkHighlight = cv2.inRange(frame, lowerPink, upperPink)
         redHighlight = cv2.inRange(frame, lowerRed, upperRed)
 
-        # self.stateTracker.findState(pinkHighlight, redHighlight)
+        self.stateTracker.findState(pinkHighlight, redHighlight)
 
         print(self.stateTracker.getState())
 
@@ -114,6 +114,7 @@ class robotController:
         cv2.waitKey(2)
 
         self.previousFrame = frame
+
 
 def spawnPosition(self, position):
     msg = ModelState()
