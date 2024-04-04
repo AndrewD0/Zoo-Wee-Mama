@@ -11,6 +11,7 @@ from gazebo_msgs.msg import ModelState
 from gazebo_msgs.srv import SetModelState
 
 from velocityController import velocityController
+from stateTracker import stateTracker
 
 class robotController:
 
@@ -21,6 +22,9 @@ class robotController:
 
         # Velocity control object
         self.velocityController = velocityController()
+
+        # State tracking object
+        self.stateTracker = stateTracker()
         
         self.bridge = CvBridge() # CvBridge initialization
     
@@ -47,8 +51,18 @@ class robotController:
         lowerRoad = np.array([0, 0, 0])
         upperRoad = np.array([128, 128, 128])
 
+        # Detecting the soil section
         lowerSoil = np.array([184, 134, 11])
         upperSoil = np.array([143, 188, 143])
+
+        # Detecting red
+        lowerRed = np.array([0,0,235])
+        upperRed = np.array([20,20,255])
+
+        #Detecting pink
+        lowerPink = np.array([200, 0, 200])
+        upperPink = np.array([255, 30, 255])
+
         imgStyle = 'bgr8'
 
         # Obtain a frame
@@ -56,18 +70,24 @@ class robotController:
             frame = self.bridge.imgmsg_to_cv2(data, imgStyle) # Convert ROS images to OpenCV images
         except CvBridgeError as e:
             print(e)
-        
+
+
+        # We use HSV for some methods
         hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         roadHighlight = cv2.inRange(hsvFrame, lowerRoad, upperRoad)
         soilHighlight = cv2.inRange(hsvFrame, lowerSoil, upperSoil)
         
         whiteHighlight = cv2.inRange(frame, lowerWhite, upperWhite)
+        pinkHighlight = cv2.inRange(frame, lowerPink, upperPink)
+        redHighlight = cv2.inRange(frame, lowerRed, upperRed)
 
-        self.velocityController.lineFollower(roadHighlight)
+        self.stateTracker.findState(pinkHighlight, redHighlight)
 
+        if(self.stateTracker.getState() == 'ROAD'):
+            self.velocityController.lineFollower(roadHighlight)
         
-        cv2.imshow("image", whiteHighlight)
+        cv2.imshow("image", pinkHighlight)
         cv2.waitKey(2)
 
 def spawnPosition(self, position):

@@ -33,12 +33,12 @@ class velocityController:
         croppedFrame = image[roiHeight:height, :]
         center = croppedFrame.shape[1] // 2
 
-        indices_high = np.where(croppedFrame > 0)
+        indicesHigh = np.where(croppedFrame > 0)
 
-        if(indices_high[1].size > 0):
-            first_x = min(indices_high[1])
-            last_x = max(indices_high[1])
-            average = int((first_x+last_x)/2)
+        if(indicesHigh[1].size > 0):
+            firstX = min(indicesHigh[1])
+            lastX = max(indicesHigh[1])
+            average = int((firstX+lastX)/2)
 
             self.error = average - center
             
