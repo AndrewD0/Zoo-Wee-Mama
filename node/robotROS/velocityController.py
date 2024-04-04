@@ -1,5 +1,6 @@
 
 import rospy
+import cv2
 import numpy as np
 from geometry_msgs.msg import Twist
 
@@ -11,7 +12,7 @@ class velocityController:
 
         # Velocities of the robot
         self.angularZ = 0
-        self.linearX = 0.2
+        self.linearX = 0.3
 
         self.error = 0
     
@@ -43,6 +44,9 @@ class velocityController:
             self.error = average - center
             
             self.angularZ = -proportionalConstant*self.error
+        
+        # cv2.imshow("image", image)
+        # cv2.waitKey(2)
 
         
         self.velocityPublish(self.linearX, self.angularZ)
