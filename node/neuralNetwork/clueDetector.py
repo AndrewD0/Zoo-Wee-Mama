@@ -7,7 +7,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from std_msgs.msg import String
 
-class clueDetector:
+class clue_Detector:
 
     def __init__(self):
         self.image = rospy.Subscriber('/R1/pi_camera/image_raw', Image, self.hsv_callback, queue_size=3) # Image subscriber
@@ -15,6 +15,11 @@ class clueDetector:
         
         self.bridge = CvBridge() # CvBridge initialization
         self.board_count = 0
+
+    def getBoardCount(self):
+        if(rospy.get_time() == 8): # test only
+            self.board_count = 2
+        return self.board_count
  
     def hsv_callback(self, data):
         #variables
@@ -217,7 +222,7 @@ class clueDetector:
 def main():
 
     rospy.init_node('clueboard_detection_node', anonymous=True) # Initialize node
-    clueDetection = clueDetector()
+    clueDetection = clue_Detector()
     # rospy.sleep(1) 
 
     try:   

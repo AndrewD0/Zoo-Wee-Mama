@@ -59,9 +59,19 @@ class robotController:
         upperRoad = np.array([128, 128, 128])
 
         # Detecting the soil section
-        lowerSoil = np.array([184, 134, 11])
-        upperSoil = np.array([143, 188, 143])
+        lowerSoil = np.array([22, 54, 198]) #[184, 134, 11] #mean grass: 27, 60, 205
+        upperSoil = np.array([35, 74, 212]) #[143, 188, 143]
 
+        image = cv2.imread("/home/fizzer/Downloads/grass.png")
+        hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        # Calculate the mean HSV values of the entire image
+        mean_hsv = np.mean(hsv_image, axis=(0, 1))
+
+        # Print the mean HSV values
+        print(f"Average HSV values: H={mean_hsv[0]}, S={mean_hsv[1]}, V={mean_hsv[2]}")
+
+    
         # Detecting red
         lowerRed = np.array([0,0,235])
         upperRed = np.array([20,20,255])
@@ -84,6 +94,26 @@ class robotController:
 
         roadHighlight = cv2.inRange(hsvFrame, lowerRoad, upperRoad)
         soilHighlight = cv2.inRange(hsvFrame, lowerSoil, upperSoil)
+        blurred = cv2.GaussianBlur(soilHighlight, (5, 5), 0)
+        # gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
+        edge = cv2.Canny(blurred, 300, 400)
+        lines = cv2.HoughLines(edge, rho=1, theta=np.pi / 180, threshold=100)  # Adjust parameters as needed
+
+        croppedROI = soilHighlight.copy()
+        if lines is not None:
+            for line in lines:
+                rho, theta = line[0]
+                a = np.cos(theta)
+                b = np.sin(theta)
+                x0 = a * rho
+                y0 = b * rho
+                x1 = int(x0 + 1000 * (-b))
+                y1 = int(y0 + 1000 * (a))
+                x2 = int(x0 - 1000 * (-b))
+                y2 = int(y0 - 1000 * (a))
+                cv2.line(croppedROI, (x1, y1), (x2, y2), (255, 255, 255), 2)  # Draw red lines to connect Hough lines
+        croppedROI = cv2.resize(croppedROI[400:720, 0:1280], (1280, 720), 0)
+        cv2.imshow("contaus", croppedROI)
         
         whiteHighlight = cv2.inRange(frame, lowerWhite, upperWhite)
         pinkHighlight = cv2.inRange(frame, lowerPink, upperPink)
@@ -106,9 +136,15 @@ class robotController:
             if(rospy.get_time() > self.previousTime+0.75):
                 if(functions.pedestrianCrossed(frame, self.previousFrame) == True):
                     self.stateTracker.setState('ROAD')
+
+        elif(self.stateTracker.getState() == 'ROUNDABOUT'):
+            self.velocityController.RoundAboutFollower(whiteHighlight)
         
-        cv2.imshow("road", roadHighlight)
-        cv2.imshow("white", whiteHighlight)
+        elif(self.stateTracker.getState() == 'GRASS'):
+            self.velocityController.lineFollower(croppedROI)
+        
+        cv2.imshow("road", whiteHighlight)
+        cv2.imshow("soil", soilHighlight)
 
         cv2.waitKey(2)
 

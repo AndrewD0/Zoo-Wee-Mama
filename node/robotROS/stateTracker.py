@@ -1,5 +1,8 @@
+#! /usr/bin/env python3
+
 import rospy
 import numpy as np
+# from neuralNetwork.clueDetector import clue_Detector
 
 class stateTracker:
 
@@ -21,9 +24,24 @@ class stateTracker:
         croppedRed = redImage[roiHeight:height, :]
     
         redHigh = np.where(croppedRed > 0)
+        pinkHigh = np.where(croppedPink > 0)
+
         if(redHigh[1].size > 0 and self.pedestrianReached == False):
             self.setState('PEDESTRIAN')
             self.pedestrianReached = True
+
+        if(pinkHigh[1].size > 0 and self.markersCounter == 0):
+            self.setState('GRASS')
+            self.markersCounter +=1
+        elif(pinkHigh[1].size > 0 and self.markersCounter == 1):
+            self.setState('YODA')
+            self.markersCounter +=1
+        elif(pinkHigh[1].size > 0 and self.markersCounter == 2):
+            self.setState('TUNNEL')
+            self.markersCounter +=1
+        
+        if(self.getCluesCounter() == 2):
+            self.setState('ROUNDABOUT')
 
     def getState(self):
         return self.robotState
@@ -39,3 +57,6 @@ class stateTracker:
     
     def getCluesCounter(self):
         return self.cluesCounter
+    
+    def setCluesCounter(self, data):
+        self.cluesCounter = data

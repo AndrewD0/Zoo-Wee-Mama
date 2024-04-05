@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 from geometry_msgs.msg import Twist
 
-
 class velocityController:
     
     def __init__(self):
@@ -12,7 +11,7 @@ class velocityController:
 
         # Velocities of the robot
         self.angularZ = 0
-        self.linearX = 0.3
+        self.linearX = 0.55
 
         self.error = 0
     
@@ -25,30 +24,72 @@ class velocityController:
 
     def lineFollower(self, image):
         # Variables
+        proportionalConstant = 0.015
+        derivativeConstant = 0.1
+
+        height, width = image.shape
+        road_width = 1500
+
+        for line in range(height-5, height//2, -1):
+            croppedFrame = image[line,:]
+
+            indicesHigh = np.where(croppedFrame > 0)[0]
+            center = width // 2
+
+            if(indicesHigh.size > 0):
+                firstX = min(indicesHigh)
+                lastX = max(indicesHigh)
+
+                if firstX < center and lastX > center:
+                    average = int((firstX+lastX)/2)
+                    self.error = average - center
+                    self.angularZ = -proportionalConstant*self.error
+                    print("two lines", average)
+                    break
+                elif lastX < center:
+                    average = int((firstX+road_width)/2)
+                    self.error = average - center
+                    self.angularZ = -proportionalConstant*self.error
+                    print("left line", average)
+                    break
+                elif firstX > center:
+                    average = int((lastX-(road_width-width))/2)
+                    self.error = average - center
+                    self.angularZ = -proportionalConstant*self.error
+                    print("right line", average)
+                    break
+                else:
+                    continue
+            else:
+                continue
+
+        # cv2.imshow("image", image)
+        # cv2.waitKey(2)
+        
+        self.velocityPublish(self.linearX, self.angularZ)
+
+    def RoundAboutFollower(self, image):
+        # Variables
         proportionalConstant = 0.02
         derivativeConstant = 0.1
 
-        cutoffFrame = 0.999999999
         height, width = image.shape
 
-        roiHeight = int(cutoffFrame*height)
-        croppedFrame = image[roiHeight:height, :]
-        center = croppedFrame.shape[1] // 2
+        for line in range(height-5, height//2, -1):
+            croppedFrame = image[line,:]
 
-        indicesHigh = np.where(croppedFrame > 0)
+            indicesHigh = np.where(croppedFrame > 0)[0]
+            center = width // 2
 
-        if(indicesHigh[1].size > 0):
-            firstX = min(indicesHigh[1])
-            lastX = max(indicesHigh[1])
-            average = int((firstX+lastX)/2)
+            if(indicesHigh.size > 0):
+                firstX = min(indicesHigh)
+                lastX = max(indicesHigh)
 
-            self.error = average - center
-            
-            self.angularZ = -proportionalConstant*self.error
-        
+                average = int((firstX+lastX)/2)
+                self.error = average - center
+                self.angularZ = -proportionalConstant*self.error
+            else:
+                continue
+
         # cv2.imshow("image", image)
         # cv2.waitKey(2)
-
-        
-        self.velocityPublish(self.linearX, self.angularZ)
-    
