@@ -59,10 +59,10 @@ class robotController:
         upperRoad = np.array([128, 128, 128])
 
         # Detecting the soil section
-        lowerSoil = np.array([22, 54, 198]) #[184, 134, 11] #mean grass: 27, 60, 205
-        upperSoil = np.array([35, 74, 212]) #[143, 188, 143]
+        lowerSoil = np.array([10, 30, 178]) #[184, 134, 11] #mean grass: 27, 60, 205
+        upperSoil = np.array([80, 255, 255]) #[143, 188, 143] # mean red: 5, 220, 201
 
-        image = cv2.imread("/home/fizzer/Downloads/grass.png")
+        image = cv2.imread("/home/fizzer/Downloads/red.png")
         hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         # Calculate the mean HSV values of the entire image
@@ -93,27 +93,17 @@ class robotController:
         hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         roadHighlight = cv2.inRange(hsvFrame, lowerRoad, upperRoad)
-        soilHighlight = cv2.inRange(hsvFrame, lowerSoil, upperSoil)
-        blurred = cv2.GaussianBlur(soilHighlight, (5, 5), 0)
-        # gray = cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY)
-        edge = cv2.Canny(blurred, 300, 400)
-        lines = cv2.HoughLines(edge, rho=1, theta=np.pi / 180, threshold=100)  # Adjust parameters as needed
+        blurred = cv2.medianBlur(hsvFrame, 15)
+        soilHighlight = cv2.inRange(blurred, lowerSoil, upperSoil)
 
-        croppedROI = soilHighlight.copy()
-        if lines is not None:
-            for line in lines:
-                rho, theta = line[0]
-                a = np.cos(theta)
-                b = np.sin(theta)
-                x0 = a * rho
-                y0 = b * rho
-                x1 = int(x0 + 1000 * (-b))
-                y1 = int(y0 + 1000 * (a))
-                x2 = int(x0 - 1000 * (-b))
-                y2 = int(y0 - 1000 * (a))
-                cv2.line(croppedROI, (x1, y1), (x2, y2), (255, 255, 255), 2)  # Draw red lines to connect Hough lines
-        croppedROI = cv2.resize(croppedROI[400:720, 0:1280], (1280, 720), 0)
-        cv2.imshow("contaus", croppedROI)
+        contours, _ = cv2.findContours(soilHighlight, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Draw contours on the original image
+        image_with_contours = cv2.drawContours(frame.copy(), contours, -1, (0, 255, 0), 2)
+
+        
+
+        cv2.imshow("contaus", image_with_contours)
         
         whiteHighlight = cv2.inRange(frame, lowerWhite, upperWhite)
         pinkHighlight = cv2.inRange(frame, lowerPink, upperPink)
@@ -124,7 +114,7 @@ class robotController:
         print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
-            self.velocityController.lineFollower(whiteHighlight)
+            self.velocityController.lineFollower(soilHighlight) #whiteHighlight
         
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
@@ -141,7 +131,7 @@ class robotController:
             self.velocityController.RoundAboutFollower(whiteHighlight)
         
         elif(self.stateTracker.getState() == 'GRASS'):
-            self.velocityController.lineFollower(croppedROI)
+            self.velocityController.lineFollower(soilHighlight)
         
         cv2.imshow("road", whiteHighlight)
         cv2.imshow("soil", soilHighlight)

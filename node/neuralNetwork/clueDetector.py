@@ -23,7 +23,7 @@ class clue_Detector:
  
     def hsv_callback(self, data):
         #variables
-        lower_blue = np.array([100, 50, 50])
+        lower_blue = np.array([90, 50, 50])
         upper_blue = np.array([130, 255, 255])
         img_style = 'bgr8'
         
@@ -39,7 +39,7 @@ class clue_Detector:
         contours, _ = cv2.findContours(mask_blue, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # board_blue = []
-        min_area = 21000 # <22000
+        min_area = 18000 # <22000
         max_area = 23000
 
         # con = frame.copy()
@@ -211,9 +211,9 @@ class clue_Detector:
             full_path = folder_path + file_name
             # character_blur = cv2.GaussianBlur(character_img, (3, 3), 0)
             # print(character_img.shape[0], character_img.shape[1])
-            mask = np.zeros_like(character_img)
-            cv2.rectangle(mask, (w_org, 0), (w, h), (255, 255, 255), -1)
-            character_img[mask == 255] = 0
+            # mask = np.zeros_like(character_img)
+            # cv2.rectangle(mask, (w_org, 0), (w, h), (255, 255, 255), -1)
+            # character_img[mask == 255] = 0
             character_resize = cv2.resize(character_img, (100, 110))
 
             cv2.imwrite(full_path, character_resize)
