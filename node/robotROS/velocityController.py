@@ -40,6 +40,7 @@ class velocityController:
 
         for contour in lineContours:
             area = cv2.contourArea(contour)
+            print(area)
 
             if area >= 2500:
                 filteredContours.append(contour)
@@ -74,10 +75,10 @@ class velocityController:
         # Error
 
         if(centroidX1 == 0 and centroidY1 == 0):
-            self.error = centerX - centroidX2
+            self.error = centroidX2 - centerX
             proportionalConstant = 0.02
         elif(centroidX2 == 0 and centroidY2 == 0):
-            self.error = centerX - centroidX1
+            self.error = centroidX1-centerX
             proportionalConstant = 0.02
         else:
             self.error = centerX-self.averageCentroid[0]
