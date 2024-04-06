@@ -40,7 +40,7 @@ class stateTracker:
             self.setState('TUNNEL')
             self.markersCounter +=1
         
-        if(self.getCluesCounter() == 2):
+        if(20 <= rospy.get_time() <= 25): #self.getCluesCounter() == 2
             self.setState('ROUNDABOUT')
 
     def getState(self):

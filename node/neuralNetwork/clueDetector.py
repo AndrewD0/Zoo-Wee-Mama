@@ -18,7 +18,7 @@ class clue_Detector:
 
     def getBoardCount(self):
         if(rospy.get_time() == 8): # test only
-            self.board_count = 2
+            self.board_count = 1
         return self.board_count
  
     def hsv_callback(self, data):
@@ -39,29 +39,42 @@ class clue_Detector:
         contours, _ = cv2.findContours(mask_blue, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # board_blue = []
-        min_area = 18000 # <22000
+        min_area = 16000 # <22000
         max_area = 23000
 
         # con = frame.copy()
-        cv2.imshow("draw", frame)
-        cv2.waitKey(2)
+        
 
         for contour in contours:
             perimeter = cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
-            if len(approx) == 4 and cv2.contourArea(contour) > min_area and cv2.contourArea(contour) < max_area and cv2.isContourConvex(approx):
+            if len(approx) == 4 and min_area < cv2.contourArea(contour) < max_area and cv2.isContourConvex(approx):
                 x, y, w, h = cv2.boundingRect(contour)
                 trim = frame[y: y+h, x: x+w]
                 # trim = cv2.cvtColor(trim, cv2.COLOR_BGR2GRAY)
                 trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
-                self.DO_SIFT(trim)
-                # cv2.drawContours(con, [contour], -1, (0, 255, 0), 2)
+                cv2.imshow("trim", trim)
+                cv2.waitKey(2)    
+                cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+                self.whiteBoard(trim)
+                
                 
                 # board_blue.append(approx)
-        
-            
-        
-        
+                
+    def whiteBoard(self, trim):
+        _, binary = cv2.threshold(trim, 127, 255, cv2.THRESH_BINARY)
+        contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+        for contour in contours:
+            perimeter = cv2.arcLength(contour, True)
+            approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
+            if len(approx) == 4 and  cv2.isContourConvex(approx):
+                x, y, w, h = cv2.boundingRect(contour)
+                whiteboard = binary[y: y+h, x: x+w]
+                # trim = cv2.cvtColor(trim, cv2.COLOR_BGR2GRAY)
+                whiteboard = cv2.resize(whiteboard, (1280, 720), interpolation=cv2.INTER_CUBIC)
+                cv2.imshow("whiteboard", whiteboard)
+                cv2.waitKey(2)    
         
         
 
@@ -71,8 +84,8 @@ class clue_Detector:
         template_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/000.png"
         img = cv2.imread(template_path)
 
-        #cv2.imshow("gray", frame)
-        cv2.waitKey(2)
+        # cv2.imshow("gray", frame)
+        # cv2.waitKey(2)
 
         self.feacture_match(frame, img)
 
@@ -124,13 +137,6 @@ class clue_Detector:
             cropped_roi = frame[min_y:max_y, min_x:max_x]
             cropped_roi = cv2.resize(cropped_roi, (1280, 720))
 
-            # Save the cropped ROI as a new image
-            # cv2.imwrite("cropped_roi.jpg", cropped_roi)
-
-            # Display the cropped ROI (optional)
-            # cv2.imshow("Cropped ROI", cropped_roi)
-            # cv2.waitKey(2)
-
             self.words_trim(cropped_roi)
             self.board_count +=1
 
@@ -138,31 +144,6 @@ class clue_Detector:
             # rospy.logerr("Homography error: %s", str(e))
             # homography = frame
             pass
-    # def words_trim(self, crop):
-    #     # print("entering")
-    #     lower_blue = np.array([90, 50, 50])
-    #     upper_blue = np.array([130, 255, 255])
-    #     space = 100
-
-    #     hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
-    #     cropped = cv2.inRange(hsv, lower_blue, upper_blue)
-        
-
-    #     cv2.imshow("cropped", cropped)
-    #     cv2.waitKey(2)
-    #     print("print")
-
-    #     h, w = cropped.shape
-    #     num = int(w//space)
-
-    #     top = cv2.resize(cropped[0: 200, 600: 1250], (1280, 720), interpolation=cv2.INTER_CUBIC)
-    #     bottom = cv2.resize(cropped[400:700, 0: 1250], (1280, 720), interpolation=cv2.INTER_CUBIC)
-
-        
-    #     cv2.imshow("top", top)
-    #     cv2.waitKey(2)
-    #     # cv2.imshow("bot", bottom)
-    #     # cv2.waitKey(2)
 
             
     def words_trim(self, crop):
@@ -183,20 +164,16 @@ class clue_Detector:
         for contour in contours:
             
             x, y, w, h = cv2.boundingRect(contour)
-            w_org = 100
             if w<650 and w>55 and h<650 and h>55:
-                if w < 100:
-                    w_org = w
-                    w = 100
                 cv2.rectangle(trim_img, (x-1, y-1), (x+1 + w, y+1 + h), (255, 0, 255), 1)
                 cv2.imshow("char", trim_img)
                 cv2.waitKey(2)
 
                 string_img = trim_img[(y-1):(y+h), (x-1):(x+w)]
-                self.character_trim(string_img, iteration, w_org)
+                self.character_trim(string_img, iteration)
                 iteration += 1
 
-    def character_trim(self, string_img, iteration, w_org):
+    def character_trim(self, string_img, iteration):
         h, w = string_img.shape
         space = 100
         folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"

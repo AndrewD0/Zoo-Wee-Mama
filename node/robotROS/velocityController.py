@@ -11,7 +11,7 @@ class velocityController:
 
         # Velocities of the robot
         self.angularZ = 0
-        self.linearX = 0.55
+        self.linearX = 0.5
 
         self.error = 0
     
@@ -24,7 +24,7 @@ class velocityController:
 
     def lineFollower(self, image):
         # Variables
-        proportionalConstant = 0.015
+        proportionalConstant = 0.02
         derivativeConstant = 0.1
 
         height, width = image.shape
@@ -44,19 +44,19 @@ class velocityController:
                     average = int((firstX+lastX)/2)
                     self.error = average - center
                     self.angularZ = -proportionalConstant*self.error
-                    print("two lines", average)
+                    # print("two lines", average)
                     break
                 elif lastX < center:
                     average = int((firstX+road_width)/2)
                     self.error = average - center
                     self.angularZ = -proportionalConstant*self.error
-                    print("left line", average)
+                    # print("left line", average)
                     break
                 elif firstX > center:
                     average = int((lastX-(road_width-width))/2)
                     self.error = average - center
                     self.angularZ = -proportionalConstant*self.error
-                    print("right line", average)
+                    # print("right line", average)
                     break
                 else:
                     continue
@@ -70,7 +70,7 @@ class velocityController:
 
     def RoundAboutFollower(self, image):
         # Variables
-        proportionalConstant = 0.02
+        proportionalConstant = 0.012
         derivativeConstant = 0.1
 
         height, width = image.shape

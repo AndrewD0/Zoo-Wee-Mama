@@ -59,17 +59,17 @@ class robotController:
         upperRoad = np.array([128, 128, 128])
 
         # Detecting the soil section
-        lowerSoil = np.array([10, 30, 178]) #[184, 134, 11] #mean grass: 27, 60, 205
+        lowerSoil = np.array([10, 35, 178]) #[184, 134, 11] #mean grass: 27, 60, 205
         upperSoil = np.array([80, 255, 255]) #[143, 188, 143] # mean red: 5, 220, 201
 
-        image = cv2.imread("/home/fizzer/Downloads/red.png")
-        hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        # image = cv2.imread("/home/fizzer/Downloads/red.png")
+        # hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-        # Calculate the mean HSV values of the entire image
-        mean_hsv = np.mean(hsv_image, axis=(0, 1))
+        # # Calculate the mean HSV values of the entire image
+        # mean_hsv = np.mean(hsv_image, axis=(0, 1))
 
-        # Print the mean HSV values
-        print(f"Average HSV values: H={mean_hsv[0]}, S={mean_hsv[1]}, V={mean_hsv[2]}")
+        # # Print the mean HSV values
+        # print(f"Average HSV values: H={mean_hsv[0]}, S={mean_hsv[1]}, V={mean_hsv[2]}")
 
     
         # Detecting red
@@ -94,16 +94,34 @@ class robotController:
 
         roadHighlight = cv2.inRange(hsvFrame, lowerRoad, upperRoad)
         blurred = cv2.medianBlur(hsvFrame, 15)
-        soilHighlight = cv2.inRange(blurred, lowerSoil, upperSoil)
+        kernel = np.ones((7, 7), np.uint8)
+        dilated = cv2.dilate(blurred, kernel, iterations=1)
+        soilHighlight = cv2.inRange(dilated, lowerSoil, upperSoil)
 
         contours, _ = cv2.findContours(soilHighlight, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # Draw contours on the original image
-        image_with_contours = cv2.drawContours(frame.copy(), contours, -1, (0, 255, 0), 2)
+        road = []
+        mask = np.ones_like(frame) * 0
+        for contour in contours:
+            perimeter = cv2.arcLength(contour, True)
+            approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
+
+            if  cv2.contourArea(contour) > 1500:
+                x, y, w, h = cv2.boundingRect(contour)
+
+                if x<=10 or x+w>=1260:
+                # Draw the filled rectangle on the mask
+                # cv2.rectangle(mask, (x, y), (x + w, y + h), (255, 255, 255), thickness=cv2.FILLED)
+
+                    road.append(contour)
 
         
+        image_with_contours = cv2.drawContours(mask, road, -1, (255, 255, 255), thickness=cv2.FILLED)
+        grassHighlight = cv2.cvtColor(image_with_contours, cv2.COLOR_BGR2GRAY)
+        
 
-        cv2.imshow("contaus", image_with_contours)
+        cv2.imshow("contaus", grassHighlight)
         
         whiteHighlight = cv2.inRange(frame, lowerWhite, upperWhite)
         pinkHighlight = cv2.inRange(frame, lowerPink, upperPink)
@@ -114,7 +132,7 @@ class robotController:
         print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
-            self.velocityController.lineFollower(soilHighlight) #whiteHighlight
+            self.velocityController.lineFollower(whiteHighlight) #whiteHighlight
         
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
@@ -131,7 +149,7 @@ class robotController:
             self.velocityController.RoundAboutFollower(whiteHighlight)
         
         elif(self.stateTracker.getState() == 'GRASS'):
-            self.velocityController.lineFollower(soilHighlight)
+            self.velocityController.lineFollower(grassHighlight)
         
         cv2.imshow("road", whiteHighlight)
         cv2.imshow("soil", soilHighlight)
