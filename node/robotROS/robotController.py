@@ -13,7 +13,8 @@ from gazebo_msgs.srv import SetModelState
 from velocityController import velocityController
 from stateTracker import stateTracker
 
-from robotFunctions import functions
+from robotHelpers import robotFunctions
+from robotHelpers import constants
 
 class robotController:
 
@@ -48,43 +49,10 @@ class robotController:
 
 
     def callback(self, data):
-        # Threshold variables
-
-        # Detecting white
-        lowerWhite = np.array([235,235,235])
-        upperWhite = np.array([255,255,255])
-
-        # Detecting the road in HSV
-        lowerRoad = np.array([0, 0, 0])
-        upperRoad = np.array([128, 128, 128])
-
-        # Detecting the soil section
-        lowerSoil = np.array([10, 35, 178]) #[184, 134, 11] #mean grass: 27, 60, 205
-        upperSoil = np.array([80, 255, 255]) #[143, 188, 143] # mean red: 5, 220, 201
-
-        # image = cv2.imread("/home/fizzer/Downloads/red.png")
-        # hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-
-        # # Calculate the mean HSV values of the entire image
-        # mean_hsv = np.mean(hsv_image, axis=(0, 1))
-
-        # # Print the mean HSV values
-        # print(f"Average HSV values: H={mean_hsv[0]}, S={mean_hsv[1]}, V={mean_hsv[2]}")
-
-    
-        # Detecting red
-        lowerRed = np.array([0,0,235])
-        upperRed = np.array([20,20,255])
-
-        #Detecting pink
-        lowerPink = np.array([200, 0, 200])
-        upperPink = np.array([255, 30, 255])
-
-        imgStyle = 'bgr8'
 
         # Obtain a frame
         try:
-            frame = self.bridge.imgmsg_to_cv2(data, imgStyle) # Convert ROS images to OpenCV images
+            frame = self.bridge.imgmsg_to_cv2(data, constants.IMG_STYLE) # Convert ROS images to OpenCV images
         except CvBridgeError as e:
             print(e)
 
@@ -92,47 +60,26 @@ class robotController:
         # We use HSV for some methods
         hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        roadHighlight = cv2.inRange(hsvFrame, lowerRoad, upperRoad)
-        blurred = cv2.medianBlur(hsvFrame, 15)
-        kernel = np.ones((7, 7), np.uint8)
-        dilated = cv2.dilate(blurred, kernel, iterations=1)
-        soilHighlight = cv2.inRange(dilated, lowerSoil, upperSoil)
-
-        contours, _ = cv2.findContours(soilHighlight, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # Draw contours on the original image
-        road = []
-        mask = np.ones_like(frame) * 0
-        for contour in contours:
-            perimeter = cv2.arcLength(contour, True)
-            approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
-
-            if  cv2.contourArea(contour) > 1500:
-                x, y, w, h = cv2.boundingRect(contour)
-
-                if x<=10 or x+w>=1260:
-                # Draw the filled rectangle on the mask
-                # cv2.rectangle(mask, (x, y), (x + w, y + h), (255, 255, 255), thickness=cv2.FILLED)
-
-                    road.append(contour)
-
+        roadHighlight = cv2.inRange(hsvFrame, constants.LOWER_ROAD, constants.UPPER_ROAD)
+        soilHighlight = cv2.inRange(hsvFrame, constants.LOWER_SOIL, constants.UPPER_SOIL)
         
-        image_with_contours = cv2.drawContours(mask, road, -1, (255, 255, 255), thickness=cv2.FILLED)
-        grassHighlight = cv2.cvtColor(image_with_contours, cv2.COLOR_BGR2GRAY)
-        
-
-        cv2.imshow("contaus", grassHighlight)
-        
-        whiteHighlight = cv2.inRange(frame, lowerWhite, upperWhite)
-        pinkHighlight = cv2.inRange(frame, lowerPink, upperPink)
-        redHighlight = cv2.inRange(frame, lowerRed, upperRed)
+        whiteHighlight = cv2.inRange(frame, constants.LOWER_WHITE, constants.UPPER_WHITE)
+        pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
+        redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
 
         self.stateTracker.findState(pinkHighlight, redHighlight)
 
         print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
-            self.velocityController.lineFollower(whiteHighlight) #whiteHighlight
+
+
+            self.velocityController.lineFollower(whiteHighlight)
+
+
+            cv2.imshow("frame", frame)
+            cv2.waitKey(2)
+
         
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
@@ -142,20 +89,9 @@ class robotController:
                 self.prevTimeCounter = 1
             
             if(rospy.get_time() > self.previousTime+0.75):
-                if(functions.pedestrianCrossed(frame, self.previousFrame) == True):
+                if(robotFunctions.pedestrianCrossed(frame, self.previousFrame) == True):
                     self.stateTracker.setState('ROAD')
-
-        elif(self.stateTracker.getState() == 'ROUNDABOUT'):
-            self.velocityController.RoundAboutFollower(whiteHighlight)
         
-        elif(self.stateTracker.getState() == 'GRASS'):
-            self.velocityController.lineFollower(grassHighlight)
-        
-        cv2.imshow("road", whiteHighlight)
-        cv2.imshow("soil", soilHighlight)
-
-        cv2.waitKey(2)
-
         self.previousFrame = frame
 
 

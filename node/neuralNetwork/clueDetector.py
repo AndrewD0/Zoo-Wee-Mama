@@ -16,15 +16,17 @@ class clue_Detector:
         self.bridge = CvBridge() # CvBridge initialization
         self.board_count = 0
 
-    def getBoardCount(self):
-        if(rospy.get_time() == 8): # test only
-            self.board_count = 1
-        return self.board_count
+    # def getBoardCount(self):
+    #     if(rospy.get_time() == 8): # test only
+    #         self.board_count = 1
+    #     return self.board_count
  
     def hsv_callback(self, data):
         #variables
         lower_blue = np.array([85, 50, 80])
         upper_blue = np.array([130, 255, 255])
+        sky_blue_low = np.array([110, 115, 163])
+        sky_blue_up = np.array([115, 120, 168])
         img_style = 'bgr8'
         
         try:
@@ -34,15 +36,21 @@ class clue_Detector:
 
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
-        # blur = cv2.GaussianBlur(mask_blue, (3, 3), 0)
+        mask_blue = mask_blue[330:720, 0:1280]
+        # blue_region = cv2.bitwise_and(frame, frame, mask=mask_blue)
+        # sky_mask = cv2.inRange(hsv, sky_blue_low, sky_blue_up)
+        # no_sky = cv2.bitwise_not(sky_mask)
+        # filtered = cv2.bitwise_and(blue_region, blue_region, mask=no_sky)
+
+
         cv2.imshow("blue_filter", mask_blue)
         cv2.waitKey(1)
 
         contours, _ = cv2.findContours(mask_blue, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # board_blue = []
-        min_area = 21000 # <22000
-        max_area = 24000
+        min_area = 13000 # <22000
+        max_area = 23000
 
         # con = frame.copy()
         
@@ -50,14 +58,18 @@ class clue_Detector:
         for contour in contours:
             perimeter = cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
+            print(cv2.contourArea(contour))
             if len(approx) == 4 and min_area < cv2.contourArea(contour) < max_area and cv2.isContourConvex(approx):
+                print("in contours")
                 x, y, w, h = cv2.boundingRect(contour)
-                trim = frame[y: y+h, x: x+w]
+                trim = frame[y+330: y+h+330, x: x+w]
                 # trim = cv2.cvtColor(trim, cv2.COLOR_BGR2GRAY)
                 trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
+                cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+
                 cv2.imshow("trim", trim)
+                cv2.imshow("drawcontour", frame)
                 cv2.waitKey(2)    
-                # cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
                 self.whiteBoard(trim)
                 
                 
