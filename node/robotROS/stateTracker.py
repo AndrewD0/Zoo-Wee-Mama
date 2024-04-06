@@ -30,19 +30,6 @@ class stateTracker:
             self.setState('PEDESTRIAN')
             self.pedestrianReached = True
 
-        if(pinkHigh[1].size > 0 and self.markersCounter == 0):
-            self.setState('GRASS')
-            self.markersCounter +=1
-        elif(pinkHigh[1].size > 0 and self.markersCounter == 1):
-            self.setState('YODA')
-            self.markersCounter +=1
-        elif(pinkHigh[1].size > 0 and self.markersCounter == 2):
-            self.setState('TUNNEL')
-            self.markersCounter +=1
-        
-        if(20 <= rospy.get_time() <= 25): #self.getCluesCounter() == 2
-            self.setState('ROUNDABOUT')
-
     def getState(self):
         return self.robotState
     

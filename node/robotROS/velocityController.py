@@ -13,6 +13,8 @@ class velocityController:
         self.angularZ = 0
         self.linearX = 0.5
 
+        self.averageCentroid = 0
+
         self.error = 0
     
     def velocityPublish(self, linear, angular):
@@ -27,46 +29,69 @@ class velocityController:
         proportionalConstant = 0.02
         derivativeConstant = 0.1
 
-        height, width = image.shape
-        road_width = 1500
+        height,width = image.shape[:2]
+        centerX = width//2
+        centerY = height//2
 
-        for line in range(height-5, height//2, -1):
-            croppedFrame = image[line,:]
 
-            indicesHigh = np.where(croppedFrame > 0)[0]
-            center = width // 2
+        lineContours, hierarchy = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-            if(indicesHigh.size > 0):
-                firstX = min(indicesHigh)
-                lastX = max(indicesHigh)
+        filteredContours = []
 
-                if firstX < center and lastX > center:
-                    average = int((firstX+lastX)/2)
-                    self.error = average - center
-                    self.angularZ = -proportionalConstant*self.error
-                    # print("two lines", average)
-                    break
-                elif lastX < center:
-                    average = int((firstX+road_width)/2)
-                    self.error = average - center
-                    self.angularZ = -proportionalConstant*self.error
-                    # print("left line", average)
-                    break
-                elif firstX > center:
-                    average = int((lastX-(road_width-width))/2)
-                    self.error = average - center
-                    self.angularZ = -proportionalConstant*self.error
-                    # print("right line", average)
-                    break
-                else:
-                    continue
-            else:
-                continue
+        for contour in lineContours:
+            area = cv2.contourArea(contour)
 
-        # cv2.imshow("image", image)
-        # cv2.waitKey(2)
+            if area >= 2500:
+                filteredContours.append(contour)
         
-        self.velocityPublish(self.linearX, self.angularZ)
+        sortedContours = sorted(filteredContours, key=cv2.contourArea, reverse=True)
+
+        if(len(sortedContours) >= 2):
+
+
+            momentOne = cv2.moments(sortedContours[0])
+            momentTwo = cv2.moments(sortedContours[1])
+
+            centroidX1 = int(momentOne["m10"]/momentOne["m00"])
+            centroidY1 = int(momentOne["m01"]/momentOne["m00"])
+            centroidX2 = int(momentTwo["m10"]/momentTwo["m00"])
+            centroidY2 = int(momentTwo["m01"]/momentTwo["m00"])
+        else:
+            momentOne = cv2.moments(sortedContours[0])
+
+            centroidX1 = int(momentOne["m10"]/momentOne["m00"])
+            centroidY1 = int(momentOne["m01"]/momentOne["m00"])
+            centroidX2 = 0
+            centroidY2 = 0
+
+        if(centroidX1 == 0 and centroidY1 == 0):
+            self.averageCentroid = (centroidX2, centroidY2)
+        elif(centroidX2 == 0 and centroidY2 == 0):
+            self.averageCentroid = (centroidX1, centroidY1)
+        else:
+            self.averageCentroid = (int((centroidX1+centroidX2)/2),int((centroidY1+centroidY2)/2))
+
+        # Error
+
+        if(centroidX1 == 0 and centroidY1 == 0):
+            self.error = centerX - centroidX2
+            proportionalConstant = 0.02
+        elif(centroidX2 == 0 and centroidY2 == 0):
+            self.error = centerX - centroidX1
+            proportionalConstant = 0.02
+        else:
+            self.error = centerX-self.averageCentroid[0]
+        
+        self.angularZ = proportionalConstant*self.error
+
+        print(self.angularZ)
+
+        self.velocityPublish(self.linearX,self.angularZ)
+
+        cv2.imshow("image", image)
+        cv2.waitKey(2)
+        
+        # self.velocityPublish(self.linearX, self.angularZ)
 
     def RoundAboutFollower(self, image):
         # Variables

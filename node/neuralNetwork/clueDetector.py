@@ -53,7 +53,7 @@ class clue_Detector:
                 trim = frame[y: y+h, x: x+w]
                 # trim = cv2.cvtColor(trim, cv2.COLOR_BGR2GRAY)
                 trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
-                cv2.imshow("trim", trim)
+                #cv2.imshow("trim", trim)
                 cv2.waitKey(2)    
                 cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
                 self.whiteBoard(trim)
@@ -73,7 +73,7 @@ class clue_Detector:
                 whiteboard = binary[y: y+h, x: x+w]
                 # trim = cv2.cvtColor(trim, cv2.COLOR_BGR2GRAY)
                 whiteboard = cv2.resize(whiteboard, (1280, 720), interpolation=cv2.INTER_CUBIC)
-                cv2.imshow("whiteboard", whiteboard)
+                #cv2.imshow("whiteboard", whiteboard)
                 cv2.waitKey(2)    
         
         
@@ -166,7 +166,7 @@ class clue_Detector:
             x, y, w, h = cv2.boundingRect(contour)
             if w<650 and w>55 and h<650 and h>55:
                 cv2.rectangle(trim_img, (x-1, y-1), (x+1 + w, y+1 + h), (255, 0, 255), 1)
-                cv2.imshow("char", trim_img)
+                #cv2.imshow("char", trim_img)
                 cv2.waitKey(2)
 
                 string_img = trim_img[(y-1):(y+h), (x-1):(x+w)]
