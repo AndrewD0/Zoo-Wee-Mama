@@ -23,7 +23,7 @@ class clue_Detector:
  
     def hsv_callback(self, data):
         #variables
-        lower_blue = np.array([90, 50, 50])
+        lower_blue = np.array([85, 50, 80])
         upper_blue = np.array([130, 255, 255])
         img_style = 'bgr8'
         
@@ -35,12 +35,14 @@ class clue_Detector:
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
         # blur = cv2.GaussianBlur(mask_blue, (3, 3), 0)
+        cv2.imshow("blue_filter", mask_blue)
+        cv2.waitKey(1)
 
         contours, _ = cv2.findContours(mask_blue, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # board_blue = []
-        min_area = 16000 # <22000
-        max_area = 23000
+        min_area = 21000 # <22000
+        max_area = 24000
 
         # con = frame.copy()
         
@@ -55,26 +57,37 @@ class clue_Detector:
                 trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
                 cv2.imshow("trim", trim)
                 cv2.waitKey(2)    
-                cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+                # cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
                 self.whiteBoard(trim)
                 
                 
                 # board_blue.append(approx)
                 
     def whiteBoard(self, trim):
-        _, binary = cv2.threshold(trim, 127, 255, cv2.THRESH_BINARY)
-        contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        hsv = cv2.cvtColor(trim, cv2.COLOR_BGR2HSV)
+        lower_blue = np.array([100, 50, 50])  # Example lower HSV values for blue
+        upper_blue = np.array([130, 255, 255])  # Example upper HSV values for blue
+
+        # Create a mask to get rid of blue regions
+        mask = cv2.inRange(hsv, lower_blue, upper_blue)
+
+        # Invert the mask to keep non-blue regions
+        inverse_mask = cv2.bitwise_not(mask)
+        contours, _ = cv2.findContours(inverse_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
         for contour in contours:
             perimeter = cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
-            if len(approx) == 4 and  cv2.isContourConvex(approx):
+            if len(approx) == 4 and  cv2.isContourConvex(approx) and cv2.contourArea(contour) > 20000:
                 x, y, w, h = cv2.boundingRect(contour)
-                whiteboard = binary[y: y+h, x: x+w]
+                whiteboard = trim[y: y+h, x: x+w]
                 # trim = cv2.cvtColor(trim, cv2.COLOR_BGR2GRAY)
-                whiteboard = cv2.resize(whiteboard, (1280, 720), interpolation=cv2.INTER_CUBIC)
+                cv2.drawContours(trim, [contour], -1, (0, 255, 0), 2)
+                whiteboard = cv2.resize(whiteboard, (1280, 720))
                 cv2.imshow("whiteboard", whiteboard)
-                cv2.waitKey(2)    
+                cv2.waitKey(2) 
+
+                self.DO_SIFT(whiteboard)   
         
         
 
@@ -137,6 +150,12 @@ class clue_Detector:
             cropped_roi = frame[min_y:max_y, min_x:max_x]
             cropped_roi = cv2.resize(cropped_roi, (1280, 720))
 
+            lower_blue = np.array([90, 50, 50])
+            upper_blue = np.array([130, 255, 255])
+            
+            hsv = cv2.cvtColor(cropped_roi, cv2.COLOR_BGR2HSV)
+            cropped_roi = cv2.inRange(hsv, lower_blue, upper_blue)
+
             self.words_trim(cropped_roi)
             self.board_count +=1
 
@@ -148,15 +167,12 @@ class clue_Detector:
             
     def words_trim(self, crop):
         print("enter words_trim")
-        lower_blue = np.array([90, 50, 50])
-        upper_blue = np.array([130, 255, 255])
-        
-        hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
-        cropped = cv2.inRange(hsv, lower_blue, upper_blue)
         
         # cv2.imshow("cropp", cropped)
         # cv2.waitKey(2)
-        
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))       
+        # cropped = cv2.erode(crop, kernel, 1)
+        cropped = cv2.dilate(crop, kernel, iterations=1)
         contours, _ = cv2.findContours(cropped, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         
         trim_img = cropped.copy()
@@ -178,8 +194,8 @@ class clue_Detector:
         space = 100
         folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
 
-        space = 100
-
+        if w < space:
+            space = w
         num = int(w//space)
         
         for character in range(num):
@@ -191,7 +207,8 @@ class clue_Detector:
             # mask = np.zeros_like(character_img)
             # cv2.rectangle(mask, (w_org, 0), (w, h), (255, 255, 255), -1)
             # character_img[mask == 255] = 0
-            character_resize = cv2.resize(character_img, (100, 110))
+            character_blur = cv2.bilateralFilter(character_img, 9, 75, 75)
+            character_resize = cv2.resize(character_blur, (100, 120))
 
             cv2.imwrite(full_path, character_resize)
 
