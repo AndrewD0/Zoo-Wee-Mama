@@ -82,9 +82,9 @@ class robotController:
         if(self.stateTracker.getState() == 'ROAD'):
 
 
-            self.velocityController.lineFollower(whiteHighlight, frame)
+            self.velocityController.lineFollower(soilHighlight, frame)
 
-
+            cv2.imshow("soil", soilHighlight)
             cv2.imshow("frame", frame)
             cv2.waitKey(2)
 
@@ -92,6 +92,7 @@ class robotController:
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
             
+            # I don't like this implementation
             if(self.prevTimeCounter == 0):
                 self.previousTime = rospy.get_time()
                 self.prevTimeCounter = 1
