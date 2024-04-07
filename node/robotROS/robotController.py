@@ -82,9 +82,9 @@ class robotController:
         if(self.stateTracker.getState() == 'ROAD'):
 
 
-            self.velocityController.lineFollower(whiteHighlight, frame)
+            self.velocityController.lineFollower(soilHighlight, frame)
 
-
+            cv2.imshow("soil", soilHighlight)
             cv2.imshow("frame", frame)
             cv2.waitKey(2)
 
