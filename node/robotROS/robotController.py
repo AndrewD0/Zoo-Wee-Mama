@@ -92,6 +92,7 @@ class robotController:
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
             
+            # I don't like this implementation
             if(self.prevTimeCounter == 0):
                 self.previousTime = rospy.get_time()
                 self.prevTimeCounter = 1
