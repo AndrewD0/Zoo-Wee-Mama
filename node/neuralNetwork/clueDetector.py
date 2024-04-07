@@ -25,18 +25,18 @@ class clue_Detector:
         #variables
         lower_blue = np.array([85, 50, 80])
         upper_blue = np.array([130, 255, 255])
-        sky_blue_low = np.array([100, 55, 120])
-        sky_blue_up = np.array([120, 140, 235])
+        sky_blue_low = np.array([100, 45, 120])
+        sky_blue_up = np.array([115, 125, 235])
         img_style = 'bgr8'
         
-        # img = cv2.imread("/home/fizzer/Downloads/sky.png")
-        # hsv_image = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        img = cv2.imread("/home/fizzer/Downloads/sky.png")
+        hsv_image = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-        # # Calculate the mean HSV values of the entire image
-        # mean_hsv = cv2.mean(hsv_image)
+        # Calculate the mean HSV values of the entire image
+        mean_hsv = cv2.mean(hsv_image)
 
-        # # Print the mean HSV values
-        # print("Mean HSV values:", mean_hsv[:3])
+        # Print the mean HSV values
+        print("Mean HSV values:", mean_hsv[:3])
 
         try:
             frame = self.bridge.imgmsg_to_cv2(data, img_style) #Convert ROS images to OpenCV images
@@ -51,16 +51,16 @@ class clue_Detector:
         no_sky = cv2.bitwise_not(sky_mask)
         filtered = cv2.bitwise_and(blue_region, blue_region, mask=no_sky)
         gray = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)
-        edge = cv2.Canny(gray, 20, 100)
+        # edge = cv2.Canny(gray, 15, 100)
 
-        cv2.imshow("blue_filter", edge)
+        cv2.imshow("blue_filter", gray)
         cv2.waitKey(1)
 
-        contours, _ = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # board_blue = []
-        min_area = 15000 # <22000
-        max_area = 23000
+        min_area = 18000 # <22000
+        max_area = 22000
 
         # con = frame.copy()
         
