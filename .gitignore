@@ -1,2 +1,5 @@
-node/robotROS/__pycache__/
+node/robotROS/__pycache__/*
+node/__pycache__/*
 Characters/*
+Character/*
+node/robotROS/robotHelpers/__pycache__/*

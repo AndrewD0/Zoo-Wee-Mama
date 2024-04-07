@@ -26,7 +26,7 @@ class velocityController:
 
     def lineFollower(self, image, frame):
         # Variables
-        proportionalConstant = 0.025
+        proportionalConstant = 0.032
         derivativeConstant = 0.1
 
         height,width = image.shape[:2]
@@ -90,7 +90,7 @@ class velocityController:
 
         self.velocityPublish(self.linearX,self.angularZ)
 
-        cv2.imshow("image", image)
+        # cv2.imshow("image", image)
 
         cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
         cv2.circle(frame, self.averageCentroid, 3, (255,0,0), 3)

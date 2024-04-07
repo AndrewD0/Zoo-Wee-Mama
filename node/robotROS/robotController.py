@@ -82,7 +82,7 @@ class robotController:
         if(self.stateTracker.getState() == 'ROAD'):
 
 
-            self.velocityController.lineFollower(soilHighlight, frame)
+            self.velocityController.lineFollower(whiteHighlight, frame)
 
             cv2.imshow("soil", soilHighlight)
             cv2.imshow("frame", frame)
@@ -99,12 +99,16 @@ class robotController:
             
             if(rospy.get_time() > self.previousTime+0.75):
                 if(robotFunctions.pedestrianCrossed(frame, self.previousFrame) == True):
-                    # self.previousTime = rospy.get_time()
-                    while (rospy.get_time() < self.previousTime+4):
-                        print("go straight!!")
-                        self.velocityController.velocityPublish(0.5, 0)
+                    self.velocityController.velocityPublish(0.5, 0)
+                    rospy.sleep(1)
+                    self.stateTracker.PedestrainEnd(redHighlight)
+
                     
-                    self.stateTracker.setState('ROAD')
+
+                    # while (rospy.get_time() < self.previousTime+4):
+                    #     print("go straight!!")
+                    
+                    # self.stateTracker.setState('ROAD')
         
         elif(self.stateTracker.getStates() == 'RoundAbout'):
             pass
