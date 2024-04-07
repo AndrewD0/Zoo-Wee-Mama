@@ -25,10 +25,19 @@ class clue_Detector:
         #variables
         lower_blue = np.array([85, 50, 80])
         upper_blue = np.array([130, 255, 255])
-        sky_blue_low = np.array([110, 115, 163])
-        sky_blue_up = np.array([115, 120, 168])
+        sky_blue_low = np.array([100, 55, 120])
+        sky_blue_up = np.array([120, 140, 235])
         img_style = 'bgr8'
         
+        # img = cv2.imread("/home/fizzer/Downloads/sky.png")
+        # hsv_image = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+        # # Calculate the mean HSV values of the entire image
+        # mean_hsv = cv2.mean(hsv_image)
+
+        # # Print the mean HSV values
+        # print("Mean HSV values:", mean_hsv[:3])
+
         try:
             frame = self.bridge.imgmsg_to_cv2(data, img_style) #Convert ROS images to OpenCV images
         except CvBridgeError as e:
@@ -36,20 +45,21 @@ class clue_Detector:
 
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
-        mask_blue = mask_blue[330:720, 0:1280]
-        # blue_region = cv2.bitwise_and(frame, frame, mask=mask_blue)
-        # sky_mask = cv2.inRange(hsv, sky_blue_low, sky_blue_up)
-        # no_sky = cv2.bitwise_not(sky_mask)
-        # filtered = cv2.bitwise_and(blue_region, blue_region, mask=no_sky)
+        # mask_blue = mask_blue[330:720, 0:1280]
+        blue_region = cv2.bitwise_and(frame, frame, mask=mask_blue)
+        sky_mask = cv2.inRange(hsv, sky_blue_low, sky_blue_up)
+        no_sky = cv2.bitwise_not(sky_mask)
+        filtered = cv2.bitwise_and(blue_region, blue_region, mask=no_sky)
+        gray = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)
+        edge = cv2.Canny(gray, 20, 100)
 
-
-        cv2.imshow("blue_filter", mask_blue)
+        cv2.imshow("blue_filter", edge)
         cv2.waitKey(1)
 
-        contours, _ = cv2.findContours(mask_blue, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # board_blue = []
-        min_area = 13000 # <22000
+        min_area = 15000 # <22000
         max_area = 23000
 
         # con = frame.copy()
@@ -58,11 +68,10 @@ class clue_Detector:
         for contour in contours:
             perimeter = cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
-            print(cv2.contourArea(contour))
             if len(approx) == 4 and min_area < cv2.contourArea(contour) < max_area and cv2.isContourConvex(approx):
-                print("in contours")
+                # print("in contours")
                 x, y, w, h = cv2.boundingRect(contour)
-                trim = frame[y+330: y+h+330, x: x+w]
+                trim = frame[y: y+h, x: x+w]
                 # trim = cv2.cvtColor(trim, cv2.COLOR_BGR2GRAY)
                 trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
                 cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
@@ -203,7 +212,7 @@ class clue_Detector:
 
     def character_trim(self, string_img, iteration):
         h, w = string_img.shape
-        space = 100
+        space = 110
         folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
 
         if w < space:

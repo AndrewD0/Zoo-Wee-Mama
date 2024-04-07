@@ -33,18 +33,25 @@ class robotController:
         self.previousFrame = np.zeros((720,1280,3), dtype = np.uint8) # Creating a variable that stores the previous frame
         self.previousTime = 0
         self.prevTimeCounter = 0
+        self.started = False
 
     
     def clockCallback(self, data):
         # Start timer
         startTime = 0
-        duration = 5
+        duration = 240
         msgStart = 'ZoWeMama,lisndrew,0,START'
         msgStop = 'ZoWeMama,lisndrew,-1,STOP'
 
-        if (rospy.get_time() == startTime):
-            self.scoretracker.publish(msgStart)
-        elif (rospy.get_time() == duration):
+        if not self.started:
+            if (rospy.has_param('launch_called')):
+                launch_called = rospy.get_param('launch_called')
+                if launch_called:
+                    self.scoretracker.publish(msgStart)
+                    self.started = True
+                    startTime = rospy.get_time()
+        
+        if (rospy.get_time() == startTime + duration):
             self.scoretracker.publish(msgStop)
 
 
@@ -64,6 +71,7 @@ class robotController:
         soilHighlight = cv2.inRange(hsvFrame, constants.LOWER_SOIL, constants.UPPER_SOIL)
         
         whiteHighlight = cv2.inRange(frame, constants.LOWER_WHITE, constants.UPPER_WHITE)
+        whiteHighlight = cv2.GaussianBlur(whiteHighlight, (5, 5), 0)
         pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
 
@@ -74,7 +82,7 @@ class robotController:
         if(self.stateTracker.getState() == 'ROAD'):
 
 
-            self.velocityController.lineFollower(whiteHighlight)
+            self.velocityController.lineFollower(whiteHighlight, frame)
 
 
             cv2.imshow("frame", frame)
@@ -90,8 +98,18 @@ class robotController:
             
             if(rospy.get_time() > self.previousTime+0.75):
                 if(robotFunctions.pedestrianCrossed(frame, self.previousFrame) == True):
+                    # self.previousTime = rospy.get_time()
+                    while (rospy.get_time() < self.previousTime+4):
+                        print("go straight!!")
+                        self.velocityController.velocityPublish(0.5, 0)
+                    
                     self.stateTracker.setState('ROAD')
         
+        elif(self.stateTracker.getStates() == 'RoundAbout'):
+            pass
+    
+        elif(self.stateTracker.getStates() == 'Grass'):
+            pass
         self.previousFrame = frame
 
 
@@ -122,7 +140,7 @@ def main():
 
     rospy.init_node('robot_control_node', anonymous=True) # Initialize node
     robotControl = robotController()
-    rospy.sleep(1) 
+    # rospy.sleep(1) 
 
     try:   
         rospy.spin()

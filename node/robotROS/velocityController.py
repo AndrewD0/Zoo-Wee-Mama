@@ -24,9 +24,9 @@ class velocityController:
         self.control.publish(move) # Publish move
     
 
-    def lineFollower(self, image):
+    def lineFollower(self, image, frame):
         # Variables
-        proportionalConstant = 0.02
+        proportionalConstant = 0.025
         derivativeConstant = 0.1
 
         height,width = image.shape[:2]
@@ -40,10 +40,11 @@ class velocityController:
 
         for contour in lineContours:
             area = cv2.contourArea(contour)
-            print(area)
+            # print(area)
 
             if area >= 2500:
                 filteredContours.append(contour)
+                cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
         
         sortedContours = sorted(filteredContours, key=cv2.contourArea, reverse=True)
 
@@ -90,6 +91,9 @@ class velocityController:
         self.velocityPublish(self.linearX,self.angularZ)
 
         cv2.imshow("image", image)
+
+        cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
+        cv2.circle(frame, self.averageCentroid, 3, (255,0,0), 3)
         cv2.waitKey(2)
         
         # self.velocityPublish(self.linearX, self.angularZ)
