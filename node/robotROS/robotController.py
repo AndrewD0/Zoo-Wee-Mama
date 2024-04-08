@@ -99,7 +99,7 @@ class robotController:
             pass
     
         elif(self.stateTracker.getStates() == 'GRASS'):
-            pass
+            self.velocityController.soilFollower(soilHighlight, frame)
 
 
         self.previousFrame = frame
