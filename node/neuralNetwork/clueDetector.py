@@ -205,7 +205,7 @@ class clue_Detector:
     def character_trim(self, string_img, iteration):
         h, w = string_img.shape
         space = 110
-        folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Character/"
+        folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
 
         if w < space:
             space = w

@@ -11,7 +11,7 @@ class velocityController:
 
         # Velocities of the robot
         self.angularZ = 0
-        self.linearX = 0.2
+        self.linearX = 0.5
 
         self.averageCentroid = 0
 
@@ -96,7 +96,7 @@ class velocityController:
         cv2.circle(frame, self.averageCentroid, 3, (255,0,0), 3)
         cv2.waitKey(2)
         
-        # self.velocityPublish(self.linearX, self.angularZ)
+        self.velocityPublish(self.linearX, self.angularZ)
 
     def roundaboutFollower(self, image):
         # Variables
@@ -220,7 +220,7 @@ class velocityController:
 
         #print(self.angularZ)
 
-        # self.velocityPublish(self.linearX,self.angularZ)
+        self.velocityPublish(self.linearX,self.angularZ)
 
         cv2.imshow("image", image)
 

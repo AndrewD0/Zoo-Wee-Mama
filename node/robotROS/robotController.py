@@ -75,7 +75,11 @@ class robotController:
         pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
 
+        cv2.imshow("pink", pinkHighlight)
+        cv2.waitKey(2)
+        
         self.stateTracker.findState(pinkHighlight, redHighlight)
+        print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
             self.velocityController.lineFollower(whiteHighlight, frame)
@@ -95,10 +99,10 @@ class robotController:
                     if(robotFunctions.pedestrianEnd(redHighlight, self.stateTracker.pedestrianReached)):
                         self.stateTracker.setState('ROAD')
         
-        elif(self.stateTracker.getStates() == 'ROUNDABOUT'):
+        elif(self.stateTracker.getState() == 'ROUNDABOUT'):
             pass
     
-        elif(self.stateTracker.getStates() == 'GRASS'):
+        elif(self.stateTracker.getState() == 'GRASS'):
             self.velocityController.soilFollower(soilHighlight, frame)
 
 
