@@ -92,7 +92,6 @@ class robotController:
                 if(robotFunctions.pedestrianCrossed(frame, self.previousFrame) == True):
                     self.velocityController.velocityPublish(0.5, 0)
                     rospy.sleep(1)
-                    
                     if(robotFunctions.pedestrianEnd(redHighlight, self.stateTracker.pedestrianReached)):
                         self.stateTracker.setState('ROAD')
         
