@@ -27,6 +27,8 @@ class stateTracker:
         if(redHigh[1].size > 0 and self.pedestrianReached == False):
             self.setState('PEDESTRIAN')
             self.pedestrianReached = True
+        elif(pinkHigh[1].size > 0 and self.getState == 'ROAD'):
+            self.setState('GRASS')
 
     def getState(self):
         return self.robotState
