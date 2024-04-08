@@ -38,7 +38,7 @@ class robotController:
     def clockCallback(self, data):
         # Start timer
         startTime = 0
-        duration = 240
+        duration = 5
         msgStart = 'ZoWeMama,lisndrew,0,START'
         msgStop = 'ZoWeMama,lisndrew,-1,STOP'
 
@@ -50,7 +50,7 @@ class robotController:
                     self.started = True
                     startTime = rospy.get_time()
         
-        if (rospy.get_time() == startTime + duration):
+        elif (rospy.get_time() == startTime + duration):
             self.scoretracker.publish(msgStop)
 
 
@@ -75,7 +75,11 @@ class robotController:
         pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
 
+        cv2.imshow("pink", pinkHighlight)
+        cv2.waitKey(2)
+        
         self.stateTracker.findState(pinkHighlight, redHighlight)
+        print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
             self.velocityController.lineFollower(whiteHighlight, frame)

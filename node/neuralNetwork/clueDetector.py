@@ -54,7 +54,7 @@ class clue_Detector:
         gray = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)
         # edge = cv2.Canny(gray, 15, 100)
 
-        cv2.imshow("blue_filter", edge)
+        cv2.imshow("blue_filter", gray)
         cv2.waitKey(1)
 
         contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -69,14 +69,11 @@ class clue_Detector:
             trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
             # cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
 
-                cv2.imshow("trim", trim)
-                cv2.imshow("drawcontour", frame)
-                cv2.waitKey(2)    
-                self.whiteBoard(trim)
-                
-                
-                # board_blue.append(approx)
-                
+            cv2.imshow("trim", trim)
+            cv2.imshow("drawcontour", frame)
+            cv2.waitKey(2)    
+            self.whiteBoard(trim)
+                        
     def whiteBoard(self, trim):
         hsv = cv2.cvtColor(trim, cv2.COLOR_BGR2HSV)
         lower_blue = np.array([100, 50, 50])  # Example lower HSV values for blue
@@ -97,8 +94,6 @@ class clue_Detector:
                 whiteboard = trim[y: y+h, x: x+w]
                 cv2.drawContours(trim, [contour], -1, (0, 255, 0), 2)
                 whiteboard = cv2.resize(whiteboard, (1280, 720))
-                cv2.imshow("whiteboard", whiteboard)
-                cv2.waitKey(2) 
 
                 self.DO_SIFT(whiteboard)   
 
@@ -188,16 +183,18 @@ class clue_Detector:
         for contour in sorted_contours_top:
             x, y, w, h = cv2.boundingRect(contour)
             if w < 650 and w > 55 and h < 650 and h > 55:
-                cv2.rectangle(trim_img, (x, y), (x + w, y + h), (255, 0, 255), 1)
+                cv2.rectangle(trim_img, (x-1, y-1), (x + w +1, y + h + 1), (255, 0, 255), 1)
 
-                string_img = trim_img[y:y+h, x:x+w]
+                string_img = trim_img[y-1:y+h+1, x-1:x+w+1]
                 self.character_trim(string_img, iteration)
                 iteration += 1
         
         for contour in sorted_contours_bottom:
             x, y, w, h = cv2.boundingRect(contour)
-            if w<650 and w>55 and h<650 and h>55:
-                cv2.rectangle(trim_img, (x-1, y-1), (x+1 + w, y+1 + h), (255, 0, 255), 1)
+            if w < 650 and w > 55 and h < 650 and h > 55:
+                # Add 360 to y-coordinate
+                y += 360
+                cv2.rectangle(trim_img, (x, y), (x + w, y + h), (255, 0, 255), 1)
                 cv2.imshow("char", trim_img)
                 cv2.waitKey(2)
 
@@ -208,7 +205,7 @@ class clue_Detector:
     def character_trim(self, string_img, iteration):
         h, w = string_img.shape
         space = 110
-        folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Character/"
+        folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
 
         if w < space:
             space = w
