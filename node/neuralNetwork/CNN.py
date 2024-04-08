@@ -41,7 +41,7 @@ class Character_NN:
         self.img = np.expand_dims([data[0] for data in all_data], axis=0)
         # print(self.img.shape)
 
-    def predict(self, output_file):
+    def predict(self):
         # with graph1.as_default():
         #     set_session(sess1)
         y_predict = []
@@ -63,7 +63,7 @@ class Character_NN:
 
 def main():
     cnn = Character_NN()
-    cnn.predict("/home/fizzer/ros_ws/src/Zoo-Wee-Mama/prediction_result.csv")
+    cnn.predict()
 
 if __name__ == '__main__':
     main()

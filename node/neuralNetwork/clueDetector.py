@@ -183,9 +183,9 @@ class clue_Detector:
         for contour in sorted_contours_top:
             x, y, w, h = cv2.boundingRect(contour)
             if w < 650 and w > 55 and h < 650 and h > 55:
-                cv2.rectangle(trim_img, (x, y), (x + w, y + h), (255, 0, 255), 1)
+                cv2.rectangle(trim_img, (x-1, y-1), (x + w+1, y + h+1), (255, 0, 255), 1)
 
-                string_img = trim_img[y:y+h, x:x+w]
+                string_img = trim_img[y-1:y+h+1, x-1:x+w+1]
                 self.character_trim(string_img, iteration)
                 iteration += 1
         
@@ -205,7 +205,7 @@ class clue_Detector:
     def character_trim(self, string_img, iteration):
         h, w = string_img.shape
         space = 110
-        folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Character/"
+        folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
 
         if w < space:
             space = w
