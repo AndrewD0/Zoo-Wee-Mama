@@ -220,7 +220,7 @@ class velocityController:
 
         #print(self.angularZ)
 
-        # self.velocityPublish(self.linearX,self.angularZ)
+        self.velocityPublish(self.linearX,self.angularZ)
 
         cv2.imshow("image", image)
 
