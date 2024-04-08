@@ -23,7 +23,7 @@ def pedestrianCrossed(frame, previousFrame):
     else:
         return False
 
-def pedestrianEnd(self, redImage, pedestrianReached):
+def pedestrianEnd(redImage, pedestrianReached):
         cutoffFrame = 0.9999999
         height, width = redImage.shape
         roiHeight = int(cutoffFrame*height)
