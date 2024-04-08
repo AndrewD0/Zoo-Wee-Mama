@@ -13,7 +13,6 @@ class stateTracker:
         self.cluesCounter = 0
         self.pedestrianReached = False
 
-
     def findState(self, pinkImage, redImage):
         cutoffFrame = 0.9999999
         height, width = redImage.shape

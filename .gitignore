@@ -3,3 +3,4 @@ node/__pycache__/*
 Characters/*
 Character/*
 node/robotROS/robotHelpers/__pycache__/*
+node/neuralNetwork/*.h5
