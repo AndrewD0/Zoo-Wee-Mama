@@ -14,8 +14,9 @@ class velocityController:
         self.linearX = 0.5
 
         self.averageCentroid = 0
-
+        self.proportionalConstant = 0
         self.error = 0
+        self.bias = 0
     
     def velocityPublish(self, linear, angular):
         move = Twist()
@@ -23,16 +24,10 @@ class velocityController:
         move.angular.z = angular # Angular velocity setup
         self.control.publish(move) # Publish move
     
-
-    def lineFollower(self, image, frame):
-        # Variables
-        proportionalConstant = 0.032
-        derivativeConstant = 0.1
-
+    def lineFollower(self, image, frame, state):
         height,width = image.shape[:2]
         centerX = width//2
         centerY = height//2
-
 
         lineContours, hierarchy = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
@@ -49,7 +44,6 @@ class velocityController:
         sortedContours = sorted(filteredContours, key=cv2.contourArea, reverse=True)
 
         if(len(sortedContours) >= 2):
-
 
             momentOne = cv2.moments(sortedContours[0])
             momentTwo = cv2.moments(sortedContours[1])
@@ -84,7 +78,7 @@ class velocityController:
         else:
             self.error = centerX-self.averageCentroid[0]
         
-        self.angularZ = proportionalConstant*self.error
+        self.angularZ = self.proportionalConstant*self.error
 
         print(self.angularZ)
 
@@ -117,7 +111,7 @@ class velocityController:
 
                 average = int((firstX+lastX)/2)
                 self.error = average - center
-                self.angularZ = -proportionalConstant*self.error
+                self.angularZ = -self.proportionalConstant*self.error
             else:
                 continue
 

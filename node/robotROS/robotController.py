@@ -55,13 +55,11 @@ class robotController:
 
 
     def callback(self, data):
-
         # Obtain a frame
         try:
             frame = self.bridge.imgmsg_to_cv2(data, constants.IMG_STYLE) # Convert ROS images to OpenCV images
         except CvBridgeError as e:
             print(e)
-
 
         # We use HSV for some methods
         hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)   
@@ -74,15 +72,12 @@ class robotController:
 
         pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
-
-        cv2.imshow("pink", pinkHighlight)
-        cv2.waitKey(2)
         
         self.stateTracker.findState(pinkHighlight, redHighlight)
         print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
-            self.velocityController.lineFollower(whiteHighlight, frame)
+            self.velocityController.lineFollower(whiteHighlight, frame, self.stateTracker.getState())
 
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
