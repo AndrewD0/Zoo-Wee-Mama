@@ -95,10 +95,10 @@ class robotController:
                     if(robotFunctions.pedestrianEnd(redHighlight, self.stateTracker.pedestrianReached)):
                         self.stateTracker.setState('ROAD')
         
-        elif(self.stateTracker.getStates() == 'ROUNDABOUT'):
+        elif(self.stateTracker.getState() == 'ROUNDABOUT'):
             pass
     
-        elif(self.stateTracker.getStates() == 'GRASS'):
+        elif(self.stateTracker.getState() == 'GRASS'):
             self.velocityController.soilFollower(soilHighlight, frame)
 
 
