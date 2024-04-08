@@ -2,7 +2,6 @@
 
 import rospy
 import numpy as np
-# from neuralNetwork.clueDetector import clue_Detector
 
 class stateTracker:
 
@@ -29,6 +28,21 @@ class stateTracker:
         if(redHigh[1].size > 0 and self.pedestrianReached == False):
             self.setState('PEDESTRIAN')
             self.pedestrianReached = True
+
+    def PedestrainEnd(self, redImage):
+        cutoffFrame = 0.9999999
+        height, width = redImage.shape
+        roiHeight = int(cutoffFrame*height)
+
+        croppedRed = redImage[roiHeight:height, :]
+    
+        redHigh = np.where(croppedRed > 0)
+
+        if(redHigh[1].size > 0 and self.pedestrianReached == True):
+            self.setState('ROAD')
+        # else:
+        #     self.setState('PEDESTRIAN')
+
 
     def getState(self):
         return self.robotState

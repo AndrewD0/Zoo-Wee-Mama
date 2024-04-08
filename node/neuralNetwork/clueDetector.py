@@ -15,21 +15,23 @@ class clue_Detector:
         
         self.bridge = CvBridge() # CvBridge initialization
         self.board_count = 0
+        self.all_data = []
 
-    # def getBoardCount(self):
-    #     if(rospy.get_time() == 8): # test only
-    #         self.board_count = 1
-    #     return self.board_count
+    def getBoardCount(self):
+        return self.board_count
+    
+    def getData(self):
+        return self.all_data
  
     def hsv_callback(self, data):
         #variables
         lower_blue = np.array([85, 50, 80])
         upper_blue = np.array([130, 255, 255])
-        sky_blue_low = np.array([100, 55, 120])
-        sky_blue_up = np.array([120, 140, 235])
+        sky_blue_low = np.array([100, 45, 110])
+        sky_blue_up = np.array([115, 125, 235])
         img_style = 'bgr8'
         
-        # img = cv2.imread("/home/fizzer/Downloads/sky.png")
+        # img = cv2.imread("/home/fizzer/Downloads/sky1.png")
         # hsv_image = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         # # Calculate the mean HSV values of the entire image
@@ -45,39 +47,30 @@ class clue_Detector:
 
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
-        # mask_blue = mask_blue[330:720, 0:1280]
         blue_region = cv2.bitwise_and(frame, frame, mask=mask_blue)
         sky_mask = cv2.inRange(hsv, sky_blue_low, sky_blue_up)
         no_sky = cv2.bitwise_not(sky_mask)
         filtered = cv2.bitwise_and(blue_region, blue_region, mask=no_sky)
         gray = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)
-        edge = cv2.Canny(gray, 20, 100)
+        # edge = cv2.Canny(gray, 15, 100)
 
-        # cv2.imshow("blue_filter", edge)
+        cv2.imshow("blue_filter", edge)
         cv2.waitKey(1)
 
-        contours, _ = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # board_blue = []
-        min_area = 15000 # <22000
-        max_area = 23000
+        min_area = 22000 # <22000
 
-        # con = frame.copy()
-        
+        sorted_contour = sorted(contours, key=cv2.contourArea, reverse=True)
 
-        for contour in contours:
-            perimeter = cv2.arcLength(contour, True)
-            approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
-            if len(approx) == 4 and min_area < cv2.contourArea(contour) < max_area and cv2.isContourConvex(approx):
-                # print("in contours")
-                x, y, w, h = cv2.boundingRect(contour)
-                trim = frame[y: y+h, x: x+w]
-                # trim = cv2.cvtColor(trim, cv2.COLOR_BGR2GRAY)
-                trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
-                cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+        if  min_area < cv2.contourArea(sorted_contour[0]):
+            x, y, w, h = cv2.boundingRect(sorted_contour[0])
+            trim = frame[y: y+h, x: x+w]
+            trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
+            # cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
 
-                #cv2.imshow("trim", trim)
-                #cv2.imshow("drawcontour", frame)
+                cv2.imshow("trim", trim)
+                cv2.imshow("drawcontour", frame)
                 cv2.waitKey(2)    
                 self.whiteBoard(trim)
                 
@@ -102,24 +95,17 @@ class clue_Detector:
             if len(approx) == 4 and  cv2.isContourConvex(approx) and cv2.contourArea(contour) > 20000:
                 x, y, w, h = cv2.boundingRect(contour)
                 whiteboard = trim[y: y+h, x: x+w]
-                # trim = cv2.cvtColor(trim, cv2.COLOR_BGR2GRAY)
                 cv2.drawContours(trim, [contour], -1, (0, 255, 0), 2)
                 whiteboard = cv2.resize(whiteboard, (1280, 720))
-                #cv2.imshow("whiteboard", whiteboard)
+                cv2.imshow("whiteboard", whiteboard)
                 cv2.waitKey(2) 
 
                 self.DO_SIFT(whiteboard)   
-        
-        
-
 
     def DO_SIFT(self, frame):
 
         template_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/000.png"
         img = cv2.imread(template_path)
-
-        # cv2.imshow("gray", frame)
-        # cv2.waitKey(2)
 
         self.feacture_match(frame, img)
 
@@ -143,7 +129,7 @@ class clue_Detector:
         self.homography(frame, kp_image, kp_grayframe, good_points, img)
 
     def homography(self, frame, kp_image, kp_grayframe, good_points, img):
-        # print("homo")
+
         query_pts = np.float32([kp_image[m.queryIdx].pt for m in good_points]).reshape(-1, 1, 2)
         train_pts = np.float32([kp_grayframe[m.trainIdx].pt for m in good_points]).reshape(-1, 1, 2)
         
@@ -156,10 +142,6 @@ class clue_Detector:
             pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
 
             dst = cv2.perspectiveTransform(pts, matrix)
-
-            # homography = cv2.polylines(frame, [np.int32(dst)], True, (255, 0, 0), 3)
-            # cv2.imshow("Homography", homography)
-            # cv2.waitKey(2)
 
            # Get the bounding box of the transformed points
             min_x = max(int(np.min(dst[:, 0, 0])), 0)
@@ -178,42 +160,55 @@ class clue_Detector:
             cropped_roi = cv2.inRange(hsv, lower_blue, upper_blue)
 
             self.words_trim(cropped_roi)
+
+            # if pedestrain reached
+            self.all_data = []
             self.board_count +=1
 
         except Exception as e:
-            # rospy.logerr("Homography error: %s", str(e))
-            # homography = frame
             pass
 
             
     def words_trim(self, crop):
-        print("enter words_trim")
-        
-        # cv2.imshow("cropp", cropped)
-        # cv2.waitKey(2)
+
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))       
-        # cropped = cv2.erode(crop, kernel, 1)
-        cropped = cv2.dilate(crop, kernel, iterations=1)
-        contours, _ = cv2.findContours(cropped, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        cropped = cv2.erode(crop, kernel, 1)
+        # cropped = cv2.dilate(crop, kernel, iterations=1)
+        top = cropped[0:360, 0:1280]
+        bottom = cropped[360:720, 0:1280]
         
+        contours_top, _ = cv2.findContours(top, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours_bottom, _ = cv2.findContours(bottom, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
         trim_img = cropped.copy()
         iteration = 0
-        for contour in contours:
-            
+        sorted_contours_top = sorted(contours_top, key=lambda c: cv2.boundingRect(c)[0])
+        sorted_contours_bottom = sorted(contours_bottom, key=lambda c: cv2.boundingRect(c)[0])
+        
+        for contour in sorted_contours_top:
+            x, y, w, h = cv2.boundingRect(contour)
+            if w < 650 and w > 55 and h < 650 and h > 55:
+                cv2.rectangle(trim_img, (x, y), (x + w, y + h), (255, 0, 255), 1)
+
+                string_img = trim_img[y:y+h, x:x+w]
+                self.character_trim(string_img, iteration)
+                iteration += 1
+        
+        for contour in sorted_contours_bottom:
             x, y, w, h = cv2.boundingRect(contour)
             if w<650 and w>55 and h<650 and h>55:
                 cv2.rectangle(trim_img, (x-1, y-1), (x+1 + w, y+1 + h), (255, 0, 255), 1)
-                # cv2.imshow("char", trim_img)
+                cv2.imshow("char", trim_img)
                 cv2.waitKey(2)
 
-                string_img = trim_img[(y-1):(y+h), (x-1):(x+w)]
+                string_img = trim_img[y:y+h, x:x+w]
                 self.character_trim(string_img, iteration)
                 iteration += 1
 
     def character_trim(self, string_img, iteration):
         h, w = string_img.shape
         space = 110
-        folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
+        folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Character/"
 
         if w < space:
             space = w
@@ -223,22 +218,21 @@ class clue_Detector:
             character_img = string_img[0:h, space * character : space * (character+1)]
             file_name = str(self.board_count) + str(iteration) + str(character) + '.jpg'
             full_path = folder_path + file_name
-            # character_blur = cv2.GaussianBlur(character_img, (3, 3), 0)
-            # print(character_img.shape[0], character_img.shape[1])
-            # mask = np.zeros_like(character_img)
-            # cv2.rectangle(mask, (w_org, 0), (w, h), (255, 255, 255), -1)
-            # character_img[mask == 255] = 0
+        
             character_blur = cv2.bilateralFilter(character_img, 9, 75, 75)
-            character_resize = cv2.resize(character_blur, (100, 120))
-
+            character_resize = cv2.resize(character_blur, (120, 100))
+            
             cv2.imwrite(full_path, character_resize)
+            self.all_data.append(character_resize)
 
+    
 
 def main():
 
     rospy.init_node('clueboard_detection_node', anonymous=True) # Initialize node
     clueDetection = clue_Detector()
-    # rospy.sleep(1) 
+    
+    rospy.sleep(1) 
 
     try:   
         rospy.spin()
