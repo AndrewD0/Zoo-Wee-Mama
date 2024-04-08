@@ -11,7 +11,7 @@ class velocityController:
 
         # Velocities of the robot
         self.angularZ = 0
-        self.linearX = 0.5
+        self.linearX = 0.2
 
         self.averageCentroid = 0
 
@@ -88,7 +88,7 @@ class velocityController:
 
         print(self.angularZ)
 
-        self.velocityPublish(self.linearX,self.angularZ)
+        #self.velocityPublish(self.linearX,self.angularZ)
 
         cv2.imshow("image", image)
 
@@ -98,7 +98,7 @@ class velocityController:
         
         # self.velocityPublish(self.linearX, self.angularZ)
 
-    def RoundAboutFollower(self, image):
+    def roundaboutFollower(self, image):
         # Variables
         proportionalConstant = 0.012
         derivativeConstant = 0.1
@@ -123,3 +123,109 @@ class velocityController:
 
         # cv2.imshow("image", image)
         # cv2.waitKey(2)
+    
+    def soilFollower(self, image, frame):
+        # Variables
+        proportionalConstant = 0.025
+        derivativeConstant = 0.1
+
+        height,width = image.shape[:2]
+        centerX = width//2
+        centerY = height//2
+
+
+        lineContours, hierarchy = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        lineContours = sorted(lineContours,key=cv2.contourArea, reverse=True)
+
+        filteredContours = []
+
+        for contour in lineContours:
+            area = cv2.contourArea(contour)
+
+            if area >= 4000:
+                filteredContours.append(contour)
+        #print("BREAK")
+        
+        sortedContours = sorted(filteredContours, key=cv2.contourArea, reverse=True)
+        #print(len(lineContours))
+        #print(len(sortedContours))
+
+        lengthContours = []
+
+        for contour in sortedContours:
+            for point in contour[:, 0]:
+                x, y= point
+                if x == 0 or x == width -1 or y == height - 1:
+                    lengthContours.append(contour)
+                    break
+        
+        #print(len(lengthContours)) 
+        lengthContours = sorted(lengthContours, key=lambda c: cv2.boundingRect(c)[1])
+        # print(len(lengthContours))
+
+        newContours = []    
+        for contour in lengthContours:
+            x,y,_,_= cv2.boundingRect(contour)
+            
+            distance = y
+            if distance < 480:
+                newContours.append(contour)
+
+        
+        newContours = sorted(newContours,key=lambda c: cv2.boundingRect(c)[1])
+                    
+
+        if(len(newContours) >= 2):
+
+
+            momentOne = cv2.moments(newContours[0])
+            momentTwo = cv2.moments(newContours[1])
+
+            centroidX1 = int(momentOne["m10"]/momentOne["m00"])
+            centroidY1 = int(momentOne["m01"]/momentOne["m00"])
+            centroidX2 = int(momentTwo["m10"]/momentTwo["m00"])
+            centroidY2 = int(momentTwo["m01"]/momentTwo["m00"])
+
+            cv2.drawContours(frame, newContours, 0, (0, 255, 0), 2)
+            cv2.drawContours(frame, newContours, 1, (0, 255, 0), 2)
+        else:
+            momentOne = cv2.moments(newContours[0])
+
+            centroidX1 = int(momentOne["m10"]/momentOne["m00"])
+            centroidY1 = int(momentOne["m01"]/momentOne["m00"])
+            centroidX2 = 0
+            centroidY2 = 0
+            cv2.drawContours(frame, newContours, 0, (0, 255, 0), 2)
+
+        if(centroidX1 == 0 and centroidY1 == 0):
+            self.averageCentroid = (centroidX2, centroidY2)
+        elif(centroidX2 == 0 and centroidY2 == 0):
+            self.averageCentroid = (centroidX1, centroidY1)
+        else:
+            self.averageCentroid = (int((centroidX1+centroidX2)/2),int((centroidY1+centroidY2)/2))
+
+        # Error
+
+        if(centroidX1 == 0 and centroidY1 == 0):
+            self.error = centroidX2 - centerX
+            proportionalConstant = 0.02
+        elif(centroidX2 == 0 and centroidY2 == 0):
+            self.error = centroidX1-centerX
+            proportionalConstant = 0.02
+        else:
+            self.error = centerX-self.averageCentroid[0]
+        
+        self.angularZ = proportionalConstant*self.error
+
+        #print(self.angularZ)
+
+        # self.velocityPublish(self.linearX,self.angularZ)
+
+        cv2.imshow("image", image)
+
+        cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
+        cv2.circle(frame, self.averageCentroid, 3, (255,0,0), 3)
+        cv2.waitKey(2)
+        
+     

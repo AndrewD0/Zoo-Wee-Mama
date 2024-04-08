@@ -65,30 +65,23 @@ class robotController:
 
 
         # We use HSV for some methods
-        hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)   
 
-        roadHighlight = cv2.inRange(hsvFrame, constants.LOWER_ROAD, constants.UPPER_ROAD)
         soilHighlight = cv2.inRange(hsvFrame, constants.LOWER_SOIL, constants.UPPER_SOIL)
+        soilHighlight = cv2.medianBlur(soilHighlight, 5)
         
         whiteHighlight = cv2.inRange(frame, constants.LOWER_WHITE, constants.UPPER_WHITE)
         whiteHighlight = cv2.GaussianBlur(whiteHighlight, (5, 5), 0)
+
         pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
 
         self.stateTracker.findState(pinkHighlight, redHighlight)
 
-        print(self.stateTracker.getState())
-
         if(self.stateTracker.getState() == 'ROAD'):
 
-
-            self.velocityController.lineFollower(soilHighlight, frame)
-
-            cv2.imshow("soil", soilHighlight)
-            cv2.imshow("frame", frame)
-            cv2.waitKey(2)
-
-        
+            self.velocityController.soilFollower(whiteHighlight, frame)\
+            
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
             
@@ -106,10 +99,10 @@ class robotController:
                     
                     self.stateTracker.setState('ROAD')
         
-        elif(self.stateTracker.getStates() == 'RoundAbout'):
+        elif(self.stateTracker.getStates() == 'ROUNDABOUT'):
             pass
     
-        elif(self.stateTracker.getStates() == 'Grass'):
+        elif(self.stateTracker.getStates() == 'GRASS'):
             pass
         self.previousFrame = frame
 
