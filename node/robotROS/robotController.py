@@ -34,7 +34,6 @@ class robotController:
         self.previousTime = 0
         self.prevTimeCounter = 0
         self.started = False
-
     
     def clockCallback(self, data):
         # Start timer
@@ -79,15 +78,8 @@ class robotController:
         self.stateTracker.findState(pinkHighlight, redHighlight)
 
         if(self.stateTracker.getState() == 'ROAD'):
-
-
             self.velocityController.lineFollower(whiteHighlight, frame)
 
-            cv2.imshow("soil", soilHighlight)
-            cv2.imshow("frame", frame)
-            cv2.waitKey(2)
-
-        
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
             
@@ -100,20 +92,16 @@ class robotController:
                 if(robotFunctions.pedestrianCrossed(frame, self.previousFrame) == True):
                     self.velocityController.velocityPublish(0.5, 0)
                     rospy.sleep(1)
-                    self.stateTracker.PedestrainEnd(redHighlight)
-
                     
-
-                    # while (rospy.get_time() < self.previousTime+4):
-                    #     print("go straight!!")
-                    
-                    # self.stateTracker.setState('ROAD')
+                    self.stateTracker.pedestrianEnd(redHighlight)
         
         elif(self.stateTracker.getStates() == 'ROUNDABOUT'):
             pass
     
         elif(self.stateTracker.getStates() == 'GRASS'):
             pass
+
+
         self.previousFrame = frame
 
 
