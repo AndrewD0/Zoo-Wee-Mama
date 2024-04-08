@@ -93,7 +93,8 @@ class robotController:
                     self.velocityController.velocityPublish(0.5, 0)
                     rospy.sleep(1)
                     
-                    self.stateTracker.pedestrianEnd(redHighlight)
+                    if(robotFunctions.pedestrianEnd(redHighlight, self.stateTracker.pedestrianReached)):
+                        self.stateTracker.setState('ROAD')
         
         elif(self.stateTracker.getStates() == 'ROUNDABOUT'):
             pass

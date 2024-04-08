@@ -29,18 +29,6 @@ class stateTracker:
             self.setState('PEDESTRIAN')
             self.pedestrianReached = True
 
-    def pedestrianEnd(self, redImage):
-        cutoffFrame = 0.9999999
-        height, width = redImage.shape
-        roiHeight = int(cutoffFrame*height)
-
-        croppedRed = redImage[roiHeight:height, :]
-    
-        redHigh = np.where(croppedRed > 0)
-
-        if(redHigh[1].size > 0 and self.pedestrianReached == True):
-            self.setState('ROAD')
-
     def getState(self):
         return self.robotState
     

@@ -22,3 +22,18 @@ def pedestrianCrossed(frame, previousFrame):
         return True
     else:
         return False
+
+def pedestrianEnd(self, redImage, pedestrianReached):
+        cutoffFrame = 0.9999999
+        height, width = redImage.shape
+        roiHeight = int(cutoffFrame*height)
+
+        croppedRed = redImage[roiHeight:height, :]
+    
+        redHigh = np.where(croppedRed > 0)
+
+        if(redHigh[1].size > 0 and pedestrianReached == True):
+            return True
+        else:
+             return False
+
