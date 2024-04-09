@@ -77,28 +77,23 @@ class robotController:
         print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
-            self.velocityController.lineFollower(whiteHighlight, frame, self.stateTracker.getState())
+            self.velocityController.lineFollower(whiteHighlight, frame)
 
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
-            
             # I don't like this implementation
             if(self.prevTimeCounter == 0):
                 self.previousTime = rospy.get_time()
                 self.prevTimeCounter = 1
-            
             if(rospy.get_time() > self.previousTime+0.75):
                 if(robotFunctions.pedestrianCrossed(frame, self.previousFrame) == True):
-                    self.velocityController.velocityPublish(0.5, 0)
-                    rospy.sleep(1)
-                    if(robotFunctions.pedestrianEnd(redHighlight, self.stateTracker.pedestrianReached)):
-                        self.stateTracker.setState('ROAD')
+                    self.stateTracker.setState('ROAD')
         
         elif(self.stateTracker.getState() == 'ROUNDABOUT'):
             pass
     
         elif(self.stateTracker.getState() == 'GRASS'):
-            self.velocityController.soilFollower(soilHighlight, frame)
+            self.velocityController.lineFollower(soilHighlight, frame)
 
 
         self.previousFrame = frame
