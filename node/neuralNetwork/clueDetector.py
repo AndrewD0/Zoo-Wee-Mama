@@ -6,6 +6,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from std_msgs.msg import String
+from cluePredictor import cluePrediction
 
 class clue_Detector:
 
@@ -17,6 +18,7 @@ class clue_Detector:
         self.board_count = 0
         self.all_data = []
         self.lastCall_time = 0
+        # self.Prediction = cluePrediction()
 
     def getBoardCount(self):
         return self.board_count
@@ -71,10 +73,10 @@ class clue_Detector:
             x, y, w, h = cv2.boundingRect(sorted_contour[0])
             trim = frame[y: y+h, x: x+w]
             trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
-            # cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+            cv2.drawContours(frame, [sorted_contour[0]], -1, (0, 255, 0), 2)
 
-            #cv2.imshow("trim", trim)
-            #cv2.imshow("drawcontour", frame)
+            cv2.imshow("trim", trim)
+            cv2.imshow("drawcontour", frame)
             cv2.waitKey(2)    
             self.whiteBoard(trim)
                         
@@ -89,8 +91,9 @@ class clue_Detector:
         # Invert the mask to keep non-blue regions
         inverse_mask = cv2.bitwise_not(mask)
         contours, _ = cv2.findContours(inverse_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    
-        for contour in contours:
+        sorted_contour = sorted(contours, key=cv2.contourArea, reverse=False)
+
+        for contour in sorted_contour:
             perimeter = cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
             if len(approx) == 4 and  cv2.isContourConvex(approx) and cv2.contourArea(contour) > 20000:
@@ -99,7 +102,34 @@ class clue_Detector:
                 cv2.drawContours(trim, [contour], -1, (0, 255, 0), 2)
                 whiteboard = cv2.resize(whiteboard, (1280, 720))
 
+                # pts1 = np.float32([[x, y], [x+w, y], [x, y+h], [x+w, y+h]])
+                # pts2 = np.float32([[0, 0], [1280, 0], [0, 720], [1280, 720]])
+                # M = cv2.getPerspectiveTransform(pts1, pts2)
+                # dst = cv2.warpPerspective(whiteboard, M, (1280, 720))
+
+                # # Get the bounding box of the transformed points
+                # min_x = max(int(np.min(dst[:, 0, 0])), 0)
+                # min_y = max(int(np.min(dst[:, 0, 1])), 0)
+                # max_x = min(int(np.max(dst[:, 0, 0])), 1280)
+                # max_y = min(int(np.max(dst[:, 0, 1])), 720)
+
+                # # Crop the region from the homography image based on the adjusted coordinates
+                # cropped_roi = whiteboard[min_y:max_y, min_x:max_x]
+                # cropped_roi = cv2.resize(cropped_roi, (1280, 720))
+                # cv2.imshow("cropped", cropped_roi)
+                # cv2.waitKey(2)
+
+                # lower_blue = np.array([90, 50, 50])
+                # upper_blue = np.array([130, 255, 255])
+                
+                # hsv = cv2.cvtColor(cropped_roi, cv2.COLOR_BGR2HSV)
+                # cropped_roi = cv2.inRange(hsv, lower_blue, upper_blue)
+
+                # self.words_trim(cropped_roi)
+                # break
+
                 self.DO_SIFT(whiteboard)   
+        
 
     def DO_SIFT(self, frame):
 
@@ -240,7 +270,8 @@ class clue_Detector:
             self.call_CNN(good_chars)
     
     def call_CNN(self, good_chars):
-        return good_chars
+        pass
+        # self.Prediction.predict(good_chars)
 
     
 

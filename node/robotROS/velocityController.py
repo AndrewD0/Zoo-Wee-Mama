@@ -26,7 +26,7 @@ class velocityController:
         move.angular.z = angular # Angular velocity setup
         self.control.publish(move) # Publish move
     
-    def lineFollower(self, image):
+    def lineFollower(self, image, frame):
         height,width = image.shape[:2]
         centerX = width//2
         centerY = height//2
@@ -65,7 +65,7 @@ class velocityController:
                 finalContours.append(contour)
         
         finalContours = sorted(finalContours, key = lambda c: cv2.boundingRect(c)[1])
-        # cv2.drawContours(frame, finalContours, -1, (0,255,0), 3)
+        cv2.drawContours(frame, finalContours, -1, (0,255,0), 3)
 
         print(len(finalContours))
 
@@ -98,10 +98,10 @@ class velocityController:
 
         print(self.angularZ)
 
-        # cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
-        # cv2.circle(frame, self.averageCentroid, 3, (255,0,0), 3)
-        # cv2.imshow("frame", frame)
-        # cv2.waitKey(2)
+        cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
+        cv2.circle(frame, self.averageCentroid, 3, (255,0,0), 3)
+        cv2.imshow("frame", frame)
+        cv2.waitKey(2)
         
         self.velocityPublish(self.linearX, self.angularZ)
 

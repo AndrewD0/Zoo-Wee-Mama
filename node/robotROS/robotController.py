@@ -77,7 +77,7 @@ class robotController:
         print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
-            self.velocityController.lineFollower(whiteHighlight)
+            self.velocityController.lineFollower(whiteHighlight, frame)
             if(self.stateTracker.getCluesCounter() == 0):
                 self.velocityController.setBias(60)
             elif(self.stateTracker.getCluesCounter() == 1):
