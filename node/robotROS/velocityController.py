@@ -29,6 +29,8 @@ class velocityController:
         centerX = width//2
         centerY = height//2
 
+        # We can make this a function!
+
         lineContours, hierarchy = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         filteredContours = []
