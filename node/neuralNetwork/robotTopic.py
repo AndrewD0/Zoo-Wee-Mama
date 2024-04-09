@@ -5,12 +5,6 @@ import numpy as np
 from std_msgs.msg import String
 from clueDetector import clue_Detector
 
-# def callback(data):
-#     rospy.loginfo(f"Received message: {data.data}")
-
-# def subscriber_node():
-#     rospy.init_node("MsgRecieve", anonymous=True)
-#     sub = rospy.Subscriber("")
 
 def publisher_node(clueBoard):
     rospy.init_node('MsgPublish', anonymous=True)

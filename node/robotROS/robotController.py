@@ -55,13 +55,11 @@ class robotController:
 
 
     def callback(self, data):
-
         # Obtain a frame
         try:
             frame = self.bridge.imgmsg_to_cv2(data, constants.IMG_STYLE) # Convert ROS images to OpenCV images
         except CvBridgeError as e:
             print(e)
-
 
         # We use HSV for some methods
         hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)   
@@ -74,40 +72,42 @@ class robotController:
 
         pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
-
-        cv2.imshow("pink", pinkHighlight)
-        cv2.waitKey(2)
         
         self.stateTracker.findState(pinkHighlight, redHighlight)
         print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
             self.velocityController.lineFollower(whiteHighlight, frame)
+            if(self.stateTracker.getCluesCounter() == 0):
+                self.velocityController.setBias(70)
+            elif(self.stateTracker.getCluesCounter() == 1):
+                self.velocityController.setBias(-70)
+            elif(self.stateTracker.getCluesCounter() == 2):
+                self.velocityController.setBias(10)
+            elif(self.stateTracker.getCluesCounter() == 3):
+                self.velocityController.setBias(0)
+                self.velocityPublish(0, -self.angularZ)
+                rospy.sleep(0.75)
+                self.velocityController.roundaboutFollower(whiteHighlight)
 
             cv2.imshow("frame", frame)
             cv2.waitKey(2)
 
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
-            
             # I don't like this implementation
             if(self.prevTimeCounter == 0):
                 self.previousTime = rospy.get_time()
                 self.prevTimeCounter = 1
-            
             if(rospy.get_time() > self.previousTime+0.75):
                 if(robotFunctions.pedestrianCrossed(frame, self.previousFrame) == True):
-                    self.velocityController.velocityPublish(0.5, 0)
-                    rospy.sleep(1)
-                    if(robotFunctions.pedestrianEnd(redHighlight, self.stateTracker.pedestrianReached)):
-                        self.velocityController.bias = -100
-                        self.stateTracker.setState('ROAD')
+                    self.stateTracker.setState('ROAD')
         
         elif(self.stateTracker.getState() == 'ROUNDABOUT'):
             pass
     
         elif(self.stateTracker.getState() == 'GRASS'):
-            self.velocityController.soilFollower(soilHighlight, frame)
+            self.velocityController.lineFollower(soilHighlight, frame)
 
 
         self.previousFrame = frame

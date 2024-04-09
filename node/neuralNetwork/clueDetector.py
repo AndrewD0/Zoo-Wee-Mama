@@ -16,6 +16,7 @@ class clue_Detector:
         self.bridge = CvBridge() # CvBridge initialization
         self.board_count = 0
         self.all_data = []
+        self.lastCall_time = 0
 
     def getBoardCount(self):
         return self.board_count
@@ -24,6 +25,7 @@ class clue_Detector:
         return self.all_data
  
     def hsv_callback(self, data):
+
         #variables
         lower_blue = np.array([85, 50, 80])
         upper_blue = np.array([130, 255, 255])
@@ -44,6 +46,8 @@ class clue_Detector:
             frame = self.bridge.imgmsg_to_cv2(data, img_style) #Convert ROS images to OpenCV images
         except CvBridgeError as e:
             print(e)
+        
+        self.boardUpdate()
 
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
@@ -53,13 +57,13 @@ class clue_Detector:
         filtered = cv2.bitwise_and(blue_region, blue_region, mask=no_sky)
         gray = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)
 
-        cv2.imshow("blue_filter", gray)
-        cv2.waitKey(1)
+        #cv2.imshow("blue_filter", gray)
+        #cv2.waitKey(1)
 
         contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         min_area = 22000 # <22000
-        max_area = 30000
+        max_area = 29000
 
         sorted_contour = sorted(contours, key=cv2.contourArea, reverse=True)
 
@@ -69,8 +73,8 @@ class clue_Detector:
             trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
             # cv2.drawContours(frame, [contour], -1, (0, 255, 0), 2)
 
-            cv2.imshow("trim", trim)
-            cv2.imshow("drawcontour", frame)
+            #cv2.imshow("trim", trim)
+            #cv2.imshow("drawcontour", frame)
             cv2.waitKey(2)    
             self.whiteBoard(trim)
                         
@@ -155,16 +159,15 @@ class clue_Detector:
             cropped_roi = cv2.inRange(hsv, lower_blue, upper_blue)
 
             self.words_trim(cropped_roi)
-
-            # if pedestrain reached
-            self.all_data = []
-            self.board_count +=1
+            
 
         except Exception as e:
             pass
 
             
     def words_trim(self, crop):
+
+        self.lastCall_time = rospy.get_time()
 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))       
         cropped = cv2.erode(crop, kernel, 1)
@@ -203,9 +206,10 @@ class clue_Detector:
                 iteration += 1
 
     def character_trim(self, string_img, iteration):
+        oneBoard_chars = []
         h, w = string_img.shape
         space = 110
-        folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
+        folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/newCharacters/"
 
         if w < space:
             space = w
@@ -220,7 +224,23 @@ class clue_Detector:
             character_resize = cv2.resize(character_blur, (120, 100))
             
             # cv2.imwrite(full_path, character_resize)
-            self.all_data.append(character_resize)
+            oneBoard_chars.append(character_resize)
+            self.all_data.append(oneBoard_chars)
+
+    def boardUpdate(self):
+        good_chars = []
+        timePassed = rospy.get_time() - self.lastCall_time
+        
+        if timePassed > 0.75 and self.all_data: # if all_data is not empty
+            good_chars = self.all_data[-1]
+            self.board_count +=1
+            self.all_data = []
+            print("GOOD CHARS !!!!!!!!!!!!!!!!!!!")
+
+            self.call_CNN(good_chars)
+    
+    def call_CNN(self, good_chars):
+        pass
 
     
 

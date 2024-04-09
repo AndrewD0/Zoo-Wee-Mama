@@ -48,6 +48,9 @@ class stateTracker:
     def getMarkersCounter(self):
         return self.markersCounter
     
+    def getPedestrianReached(self):
+        return self.pedestrianReached
+    
     def getCluesCounter(self):
         return self.cluesCounter
     

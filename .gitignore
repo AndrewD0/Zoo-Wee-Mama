@@ -1,7 +1,8 @@
-node/robotROS/__pycache__/*
+node/robotROS/__pycache__/*.pyc
 node/__pycache__/*
 Characters/*
 Character/*
 node/robotROS/robotHelpers/__pycache__/*
 node/neuralNetwork/*.h5
-Valication/*
+Validation/*
+newCharacters/*

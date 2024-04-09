@@ -2,4 +2,5 @@
 	<param name="launch_called" value="true" />
 	<node pkg="Zoo-Wee-Mama" type="robotController.py" name="robot_brain" output="screen"/>
 	<node pkg="Zoo-Wee-Mama" type="clueDetector.py" name="clue_board" output="screen"/>
+	<node pkg="Zoo-Wee-Mama" type="robotTopic.py" name="msg_topic" output="screen"/>
 </launch>
