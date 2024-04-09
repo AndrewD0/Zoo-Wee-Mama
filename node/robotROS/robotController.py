@@ -78,15 +78,16 @@ class robotController:
 
         if(self.stateTracker.getState() == 'ROAD'):
             self.velocityController.lineFollower(whiteHighlight, frame)
+
             if(self.stateTracker.getCluesCounter() == 0):
                 self.velocityController.setBias(60)
             elif(self.stateTracker.getCluesCounter() == 1):
                 self.velocityController.setBias(-60)
             elif(self.stateTracker.getCluesCounter() == 2):
                 self.velocityController.setBias(-40)
-            elif(self.stateTracker.getCluesCounter() == 3):
+            elif(self.stateTracker.getCluesCounter() >= 3):
                 # self.velocityController.setBias(-60)
-                self.velocityController.roundaboutFollower(whiteHighlight)
+                self.stateTracker.setState('ROUNDABOUT')
 
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
@@ -99,7 +100,7 @@ class robotController:
                     self.stateTracker.setState('ROAD')
         
         elif(self.stateTracker.getState() == 'ROUNDABOUT'):
-            pass
+            self.velocityController.roundaboutFollower(whiteHighlight, frame)
     
         elif(self.stateTracker.getState() == 'GRASS'):
             self.velocityController.lineFollower(soilHighlight, frame)
