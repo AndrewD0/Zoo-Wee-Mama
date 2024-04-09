@@ -140,5 +140,11 @@ class velocityController:
     
     def getProportionalConstant(self):
         return self.proportionalConstant
+    
+    def setBias(self, bias):
+        error = self.bias
+    
+    def getBias(self):
+        return self.bias
         
      
