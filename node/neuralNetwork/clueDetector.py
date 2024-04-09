@@ -62,8 +62,8 @@ class clue_Detector:
 
         contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        min_area = 22000 # <22000
-        max_area = 29000
+        min_area = 18000 # <22000
+        max_area = 26000
 
         sorted_contour = sorted(contours, key=cv2.contourArea, reverse=True)
 
@@ -231,7 +231,7 @@ class clue_Detector:
         good_chars = []
         timePassed = rospy.get_time() - self.lastCall_time
         
-        if timePassed > 0.75 and self.all_data: # if all_data is not empty
+        if timePassed > 0.5 and self.all_data: # if all_data is not empty
             good_chars = self.all_data[-1]
             self.board_count +=1
             self.all_data = []
@@ -240,7 +240,7 @@ class clue_Detector:
             self.call_CNN(good_chars)
     
     def call_CNN(self, good_chars):
-        pass
+        return good_chars
 
     
 

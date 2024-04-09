@@ -18,11 +18,10 @@ def publisher_node(clueBoard):
         msg = String(data=str(board_count))
 
         pub.publish(msg)
+
+        
         rate.sleep()
 
 if __name__ == '__main__':
-    try:
-        clueBoard = clue_Detector()
-        publisher_node(clueBoard)
-    except rospy.ROSInterruptException:
-        pass
+    clueBoard = clue_Detector()
+    publisher_node(clueBoard)

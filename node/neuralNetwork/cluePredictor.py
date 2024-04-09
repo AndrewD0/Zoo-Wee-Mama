@@ -3,7 +3,6 @@
 from tensorflow.python.keras.models import load_model
 import cv2
 import numpy as np
-import os
 from clueDetector import clue_Detector
 
 class cluePrediction:
@@ -28,13 +27,17 @@ class cluePrediction:
 
 def main():
     cnn = cluePrediction()
-    char_folder = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
-    all_data = []
+    # char_folder = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/Characters/"
+    # all_data = []
 
-    for img_file in os.listdir(char_folder):
-        img_array = cv2.imread(os.path.join(char_folder, img_file))
-        print("Predicted File     : " + img_file[0])
-        cnn.predict(img_array)
+    # for img_file in os.listdir(char_folder):
+    #     img_array = cv2.imread(os.path.join(char_folder, img_file))
+    #     print("Predicted File     : " + img_file[0])
+    #     cnn.predict(img_array)
+
+    char_data = clue_Detector.call_CNN()
+    for i in char_data:
+        cnn.predict(i)
 
 if __name__ == '__main__':
     main()

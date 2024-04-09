@@ -33,11 +33,11 @@ class robotController:
         self.previousFrame = np.zeros((720,1280,3), dtype = np.uint8) # Creating a variable that stores the previous frame
         self.previousTime = 0
         self.prevTimeCounter = 0
-        self.started = False
+        self.started = False 
+        self.startTime = 0
     
     def clockCallback(self, data):
         # Start timer
-        startTime = 0
         duration = 5
         msgStart = 'ZoWeMama,lisndrew,0,START'
         msgStop = 'ZoWeMama,lisndrew,-1,STOP'
@@ -48,9 +48,9 @@ class robotController:
                 if launch_called:
                     self.scoretracker.publish(msgStart)
                     self.started = True
-                    startTime = rospy.get_time()
+                    self.startTime = rospy.get_time()
         
-        elif (rospy.get_time() == startTime + duration):
+        elif (rospy.get_time() == self.startTime + duration):
             self.scoretracker.publish(msgStop)
 
 
@@ -77,21 +77,16 @@ class robotController:
         print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
-            self.velocityController.lineFollower(whiteHighlight, frame)
+            self.velocityController.lineFollower(whiteHighlight)
             if(self.stateTracker.getCluesCounter() == 0):
-                self.velocityController.setBias(70)
+                self.velocityController.setBias(60)
             elif(self.stateTracker.getCluesCounter() == 1):
-                self.velocityController.setBias(-70)
+                self.velocityController.setBias(-60)
             elif(self.stateTracker.getCluesCounter() == 2):
-                self.velocityController.setBias(10)
+                self.velocityController.setBias(-40)
             elif(self.stateTracker.getCluesCounter() == 3):
-                self.velocityController.setBias(0)
-                self.velocityPublish(0, -self.angularZ)
-                rospy.sleep(0.75)
+                # self.velocityController.setBias(-60)
                 self.velocityController.roundaboutFollower(whiteHighlight)
-
-            cv2.imshow("frame", frame)
-            cv2.waitKey(2)
 
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
@@ -108,6 +103,10 @@ class robotController:
     
         elif(self.stateTracker.getState() == 'GRASS'):
             self.velocityController.lineFollower(soilHighlight, frame)
+            if(self.stateTracker.getCluesCounter() == 4):
+                self.velocityController.setBias(70)
+            elif(self.stateTracker.getCluesCounter() == 5):
+                pass
 
 
         self.previousFrame = frame
