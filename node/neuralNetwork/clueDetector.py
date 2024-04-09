@@ -52,7 +52,6 @@ class clue_Detector:
         no_sky = cv2.bitwise_not(sky_mask)
         filtered = cv2.bitwise_and(blue_region, blue_region, mask=no_sky)
         gray = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)
-        # edge = cv2.Canny(gray, 15, 100)
 
         cv2.imshow("blue_filter", gray)
         cv2.waitKey(1)
@@ -60,10 +59,11 @@ class clue_Detector:
         contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         min_area = 22000 # <22000
+        max_area = 30000
 
         sorted_contour = sorted(contours, key=cv2.contourArea, reverse=True)
 
-        if  min_area < cv2.contourArea(sorted_contour[0]):
+        if  min_area < cv2.contourArea(sorted_contour[0]) < max_area:
             x, y, w, h = cv2.boundingRect(sorted_contour[0])
             trim = frame[y: y+h, x: x+w]
             trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
@@ -219,7 +219,7 @@ class clue_Detector:
             character_blur = cv2.bilateralFilter(character_img, 9, 75, 75)
             character_resize = cv2.resize(character_blur, (120, 100))
             
-            cv2.imwrite(full_path, character_resize)
+            # cv2.imwrite(full_path, character_resize)
             self.all_data.append(character_resize)
 
     

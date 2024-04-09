@@ -3,11 +3,13 @@ import rospy
 import cv2
 import numpy as np
 from geometry_msgs.msg import Twist
+from std_msgs.msg import String
 
 class velocityController:
     
     def __init__(self):
         self.control = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=3) # Velocity publisher
+        self.msg = rospy.Subscriber('Output_topic', String, queue_size=10)
 
         # Velocities of the robot
         self.angularZ = 0
@@ -16,6 +18,10 @@ class velocityController:
         self.averageCentroid = 0
 
         self.error = 0
+
+        self.bias = 70
+
+    
     
     def velocityPublish(self, linear, angular):
         move = Twist()
@@ -71,7 +77,7 @@ class velocityController:
         elif(centroidX2 == 0 and centroidY2 == 0):
             self.averageCentroid = (centroidX1, centroidY1)
         else:
-            self.averageCentroid = (int((centroidX1+centroidX2)/2),int((centroidY1+centroidY2)/2))
+            self.averageCentroid = (int((centroidX1+centroidX2)/2 - self.bias),int((centroidY1+centroidY2)/2))
 
         # Error
 

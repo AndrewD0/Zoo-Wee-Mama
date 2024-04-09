@@ -84,6 +84,9 @@ class robotController:
         if(self.stateTracker.getState() == 'ROAD'):
             self.velocityController.lineFollower(whiteHighlight, frame)
 
+            cv2.imshow("frame", frame)
+            cv2.waitKey(2)
+
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
             
@@ -97,6 +100,7 @@ class robotController:
                     self.velocityController.velocityPublish(0.5, 0)
                     rospy.sleep(1)
                     if(robotFunctions.pedestrianEnd(redHighlight, self.stateTracker.pedestrianReached)):
+                        self.velocityController.bias = -100
                         self.stateTracker.setState('ROAD')
         
         elif(self.stateTracker.getState() == 'ROUNDABOUT'):
