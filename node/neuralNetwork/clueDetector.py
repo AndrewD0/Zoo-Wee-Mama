@@ -18,7 +18,8 @@ class clue_Detector:
         self.board_count = 0
         self.all_data = []
         self.lastCall_time = 0
-        # self.Prediction = cluePrediction()
+        self.oneBoard_chars = []
+        self.Prediction = cluePrediction()
 
     def getBoardCount(self):
         return self.board_count
@@ -196,7 +197,7 @@ class clue_Detector:
 
             
     def words_trim(self, crop):
-
+        self.oneBoard_chars = []
         self.lastCall_time = rospy.get_time()
 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))       
@@ -236,7 +237,6 @@ class clue_Detector:
                 iteration += 1
 
     def character_trim(self, string_img, iteration):
-        oneBoard_chars = []
         h, w = string_img.shape
         space = 110
         folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/newCharacters/"
@@ -254,8 +254,8 @@ class clue_Detector:
             character_resize = cv2.resize(character_blur, (120, 100))
             
             # cv2.imwrite(full_path, character_resize)
-            oneBoard_chars.append(character_resize)
-            self.all_data.append(oneBoard_chars)
+            self.oneBoard_chars.append(character_resize)
+            self.all_data.append(self.oneBoard_chars)
 
     def boardUpdate(self):
         good_chars = []
@@ -271,7 +271,7 @@ class clue_Detector:
     
     def call_CNN(self, good_chars):
         pass
-        # self.Prediction.predict(good_chars)
+        self.Prediction.predict(good_chars)
 
     
 

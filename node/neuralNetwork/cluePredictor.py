@@ -10,9 +10,10 @@ class cluePrediction:
         CNN_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/node/neuralNetwork/C_NN.h5"
         self.CNN = load_model(CNN_path)
         print("ready!!!!!")
-        self.outputfile = open("/home/fizz/ros_ws/src/Zoo-Wee-Mama/predict.txt", "w")
+        self.output_file = open("/home/fizzer/ros_ws/src/Zoo-Wee-Mama/predict.txt", "w")
 
     def predict(self, char_data): # one trimmed character at a time
+        result = []
         
         for img_array in char_data:
 
@@ -26,7 +27,9 @@ class cluePrediction:
             labels = [chr(i) for i in range(65, 91)] + [str(i) for i in range(10)]
             predicted_character = labels[y_predict]  # Map the index to the corresponding character
             
-            self.output_file.write(f"Predicted Character: {predicted_character}\n")
+            result.append(predicted_character)
+            
+        self.output_file.write(f"Predicted Character: {result}\n")
 
 def main(good_chars):
     cnn = cluePrediction()
