@@ -1,0 +1,4 @@
+Predicted Character: ['S', 'I', 'Z', 'E', 'A', 'T', 'R', 'I', 'P', 'L', 'E', 'T', 'O', 'F']
+Predicted Character: ['V', 'I', 'C', 'T', 'I', 'M', 'Z', 'O', '9', 'I', 'E', 'S']
+Predicted Character: ['C', 'R', 'I', 'M', 'S', 'H', 'K', 'H', 'E', 'P']
+Predicted Character: ['T', 'I', 'M', 'E', 'M', 'I', 'D', 'I', 'G', 'H', 'G']

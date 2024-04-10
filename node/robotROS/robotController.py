@@ -75,6 +75,8 @@ class robotController:
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
         
         self.stateTracker.findState(pinkHighlight, redHighlight)
+        cv2.imshow("pink", pinkHighlight)
+        cv2.waitKey(2)
 
         print(self.stateTracker.getState())
 
@@ -138,11 +140,12 @@ class robotController:
                     self.stateTracker.setState('ROAD')
     
         elif(self.stateTracker.getState() == 'GRASS'):
-            self.velocityController.lineFollower(soilHighlight, frame)
-            if(self.stateTracker.getCluesCounter() == 4):
-                self.velocityController.setBias(70)
-            elif(self.stateTracker.getCluesCounter() == 5):
-                pass
+            self.velocityController.velocityPublish(0,0)
+            # self.velocityController.lineFollower(soilHighlight, frame)
+            # if(self.stateTracker.getCluesCounter() == 4):
+            #     self.velocityController.setBias(70)
+            # elif(self.stateTracker.getCluesCounter() == 5):
+            #     pass
 
 
         self.previousFrame = frame

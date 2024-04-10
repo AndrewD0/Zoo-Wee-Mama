@@ -13,7 +13,7 @@ class velocityController:
 
         # Velocities of the robot
         self.angularZ = 0
-        self.linearX = 0.5
+        self.linearX = 0.3
 
         self.averageCentroid = (0,0)
         self.proportionalConstant = 0.03
@@ -111,7 +111,7 @@ class velocityController:
         cv2.imshow("mask", image)
         cv2.waitKey(2)
         
-        # self.velocityPublish(self.linearX, self.angularZ)
+        self.velocityPublish(self.linearX, self.angularZ)
 
     def roundaboutFollower(self, image, frame):
         # Variables
@@ -131,18 +131,17 @@ class velocityController:
             firstX = min(indicesHigh[1])
             lastX = max(indicesHigh[1])
             average = int((firstX+lastX)/2)
+
+            print("First: %d Last: %d Average: %d" %(firstX, lastX, average))
+    
             self.error = center-average
             self.angularZ = self.proportionalConstant*self.error
-            if(self.roundaboutStart == 0):
-                self.angularZ = -self.proportionalConstant*self.error
-                self.roundaboutStart = 1
         
-        print(self.error)
-        print(self.angularZ)
+        print("Error: %d AngularZ: %d" % (self.error, self.angularZ))
         cv2.imshow("round", image)
         cv2.waitKey(2)
 
-        # self.velocityPublish(self.linearX, self.angularZ)
+        self.velocityPublish(self.linearX, self.angularZ)
 
     def setLinearX(self, linearX):
         self.linearX = linearX
