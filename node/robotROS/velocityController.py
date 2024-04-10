@@ -93,6 +93,11 @@ class velocityController:
 
             self.averageCentroid = (centroidX1, centroidY1)
             self.error = self.averageCentroid[0] - centerX
+        else:
+            centroidX1 = 0
+            centroidX2 = 0
+            centroidY1 = 0
+            centroidY2 = 0
 
         
         self.angularZ = self.proportionalConstant*self.error
@@ -111,6 +116,7 @@ class velocityController:
     def roundaboutFollower(self, image, frame):
         # Variables
 
+        # self.linearX = 0.45
         height, width = image.shape
         cutoffFrame = 0.9999999
 
@@ -128,9 +134,9 @@ class velocityController:
             average = int((firstX+lastX)/2)
             self.error = center-average
             self.angularZ = self.proportionalConstant*self.error
-            if(self.roundaboutStart <= 8):
-                self.angularZ = -self.proportionalConstant*self.error
-                self.roundaboutStart +=1
+            # if(self.roundaboutStart <= 8):
+            #     self.angularZ = -self.proportionalConstant*self.error
+            #     self.roundaboutStart +=1
         
         print(self.error)
         print(self.angularZ)

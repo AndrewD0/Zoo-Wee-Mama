@@ -15,27 +15,25 @@ class stateTracker:
         self.cluesCounter = 0
         self.pedestrianReached = False
         self.startedRoundabout = False
+        self.pinkReached = False
 
     def msg_callback(self, data):
         self.cluesCounter = int(data.data)
         print("Board Count:" , self.cluesCounter)
 
     def findState(self, pinkImage, redImage):
-        cutoffFrame = 0.9999999
         height, width = redImage.shape
-        roiHeight = int(cutoffFrame*height)
 
-        croppedPink = pinkImage[roiHeight:height, :]
-        croppedRed = redImage[roiHeight:height, :]
-    
-        redHigh = np.where(croppedRed > 0)
-        pinkHigh = np.where(croppedPink > 0)
+        if np.any(pinkImage[-1,:]) > 0:
+            self.pinkReached = True
+        if self.pinkReached == True:
+            if np.any(pinkImage[-1,:]) == 0 and self.getState() == 'ROAD':
+                self.setState('GRASS')
 
-        if(redHigh[1].size > 0 and self.pedestrianReached == False):
+        if( np.any(redImage[-1,:]) > 0 and self.pedestrianReached == False):
             self.setState('PEDESTRIAN')
             self.pedestrianReached = True
-        elif(pinkHigh[1].size > 0 and self.getState() == 'ROAD'):
-            self.setState('GRASS')
+            
 
     def getState(self):
         return self.robotState

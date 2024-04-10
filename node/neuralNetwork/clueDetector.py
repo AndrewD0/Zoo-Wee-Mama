@@ -63,21 +63,26 @@ class clue_Detector:
 
         contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        min_area = 19000 # <22000
-        max_area = 28000
+        min_area = 25000 # <22000
+        max_area = 25000
+        min_ratio = 1.3
+        max_ratio = 2
 
         sorted_contour = sorted(contours, key=cv2.contourArea, reverse=True)
 
-        if  min_area < cv2.contourArea(sorted_contour[0]) < max_area:
+        if  min_area < cv2.contourArea(sorted_contour[0]):
             x, y, w, h = cv2.boundingRect(sorted_contour[0])
-            trim = frame[y: y+h, x: x+w]
-            trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
-            cv2.drawContours(frame, [sorted_contour[0]], -1, (0, 255, 0), 2)
 
-           # cv2.imshow("trim", trim)
+            aspect_ratio = float(w) / h
+            if min_ratio < aspect_ratio < max_ratio:
+                trim = frame[y: y+h, x: x+w]
+                trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
+                # cv2.drawContours(frame, [sorted_contour[0]], -1, (0, 255, 0), 2)
+
+            # cv2.imshow("trim", trim)
             # cv2.imshow("drawcontour", frame)
-            cv2.waitKey(2)    
-            self.whiteBoard(trim)
+            # cv2.waitKey(2)    
+                self.whiteBoard(trim)
                         
     def whiteBoard(self, trim):
         hsv = cv2.cvtColor(trim, cv2.COLOR_BGR2HSV)
@@ -112,7 +117,7 @@ class clue_Detector:
                 self.words_trim(dst)
                 break
 
-                self.DO_SIFT(whiteboard)   
+                # self.DO_SIFT(whiteboard)   
         
 
     def DO_SIFT(self, frame):
@@ -200,7 +205,7 @@ class clue_Detector:
         for contour in sorted_contours_top:
             x, y, w, h = cv2.boundingRect(contour)
             if w < 650 and w > 55 and h < 650 and h > 55:
-                cv2.rectangle(top, (x-1, y-1), (x + w +1, y + h + 1), (255, 0, 255), 1)
+                # cv2.rectangle(top, (x-1, y-1), (x + w +1, y + h + 1), (255, 0, 255), 1)
 
                 string_img = top[y-1:y+h+1, x-1:x+w+1]
                 self.character_trim(string_img, iteration)
@@ -219,7 +224,7 @@ class clue_Detector:
             if w < 650 and w > 55 and h < 650 and h > 55:
                 # Add 360 to y-coordinate
                 # y += 360
-                cv2.rectangle(bottom, (x, y), (x + w, y + h), (255, 0, 255), 1)
+                # cv2.rectangle(bottom, (x, y), (x + w, y + h), (255, 0, 255), 1)
 
                 string_img = bottom[y-1:y+h+1, x-1:x+w+1]
                 self.character_trim(string_img, iteration)
@@ -236,20 +241,20 @@ class clue_Detector:
 
     def character_trim(self, string_img, iteration):
         h, w = string_img.shape
-        space = 110
+        space = 120
         folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/newCharacters/"
 
         if w < space:
             space = w
         num = w//space
-        if w % space != 0:
+        if w // space == 0:
             num += 1
-        print(num)
+        # print(num)
         
         for character in range(num):
             character_img = string_img[0:h, space * character : space * (character+1)]
             file_name = str(self.board_count) + str(iteration) + str(character) + '.jpg'
-            full_path = folder_path + file_name
+            # full_path = folder_path + file_name
         
             character_blur = cv2.bilateralFilter(character_img, 9, 75, 75)
             character_resize = cv2.resize(character_blur, (120, 100))
@@ -261,8 +266,13 @@ class clue_Detector:
 
     def boardUpdate(self):
         timePassed = rospy.get_time() - self.lastCall_time
+        time_threshold = 0.75
+        if self.board_count == 3:
+            time_threshold = 0.05
+        else:
+            time_threshold = 0.75
         
-        if timePassed > 0.75 and self.all_data: # if all_data is not empty
+        if timePassed > time_threshold and self.all_data: # if all_data is not empty
             good_chars = self.all_data[-1]
             self.call_CNN(good_chars)
     

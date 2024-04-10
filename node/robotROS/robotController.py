@@ -35,6 +35,7 @@ class robotController:
         self.prevTimeCounter = 0
         self.started = False 
         self.startTime = 0
+        self.GrassTransition = False
     
     def clockCallback(self, data):
         # Start timer
@@ -66,7 +67,7 @@ class robotController:
         grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
 
         soilHighlight = cv2.inRange(hsvFrame, constants.LOWER_SOIL, constants.UPPER_SOIL)
-        soilHighlight = cv2.medianBlur(soilHighlight, 5)
+        soilHighlight = cv2.medianBlur(soilHighlight, 7)
         
         ret, whiteHighlight = cv2.threshold(grayFrame, 230,255, cv2.THRESH_BINARY)
         whiteHighlight = cv2.GaussianBlur(whiteHighlight, (9,9),0)
@@ -74,6 +75,11 @@ class robotController:
         pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
         
+        cv2.imshow("redhighlight", redHighlight)
+        cv2.waitKey(2)
+        cv2.imshow("pinkhighlight", pinkHighlight)
+        cv2.waitKey(2)
+
         self.stateTracker.findState(pinkHighlight, redHighlight)
 
         print(self.stateTracker.getState())
@@ -81,18 +87,10 @@ class robotController:
         if(self.stateTracker.getState() == 'ROAD'):
             self.velocityController.lineFollower(whiteHighlight, frame)
 
-            if(self.stateTracker.getCluesCounter() == 0):
+            if(self.stateTracker.getCluesCounter() == 2):
 
-                self.velocityController.setBias(60)
-
-            elif(self.stateTracker.getCluesCounter() == 1):
-
-                self.velocityController.setBias(-60)
-
-            elif(self.stateTracker.getCluesCounter() == 2):
-
-                self.velocityController.setBias(20)
                 self.velocityController.setLinearX(0.3)
+                # self.velocityController.setBias(30)
 
             elif(self.stateTracker.getCluesCounter() == 3):
 
@@ -111,9 +109,6 @@ class robotController:
             if(rospy.get_time() > self.previousTime+0.75):
                 if(robotFunctions.pedestrianCrossed(frame, self.previousFrame) == True):
                     self.stateTracker.setState('ROAD')
-
-            if(self.stateTracker.getCluesCounter() != 1):
-                self.stateTracker.setCluesCounter = 1
         
         elif(self.stateTracker.getState() == 'ROUNDABOUT'):
 
@@ -124,16 +119,18 @@ class robotController:
                     self.velocityController.setBias(0)
                     self.velocityController.setError(0)
 
-                    self.velocityController.setLinearX(0.3)
+                    self.velocityController.setLinearX(0.25)
                     self.velocityController.setProportionalConstant(0.02)
 
                     self.previousTime = rospy.get_time()
                     self.prevTimeCounter = 1
 
                 if(rospy.get_time() < self.previousTime + 1):
-                    self.velocityController.velocityPublish(0,-1)
+                    self.velocityController.velocityPublish(0,-1.1)
+                elif(rospy.get_time() < self.previousTime + 2.5):
+                        self.velocityController.velocityPublish(0.3, 0)
                 else:
-                    self.velocityController.velocityPublish(0,0)
+                    # self.velocityController.velocityPublish(0,0)
                     self.stateTracker.startRoundabout(False)
             else:
                 self.velocityController.roundaboutFollower(whiteHighlight, frame)
@@ -141,12 +138,24 @@ class robotController:
                     self.stateTracker.setState('ROAD')
     
         elif(self.stateTracker.getState() == 'GRASS'):
+            # if self.GrassTransition == False:
+            #     previous_time = rospy.get_time()
+            #     self.GrassTransition = True
+            #     while(rospy.get_time() - previous_time < 0.5):
+            #         self.velocityController.velocityPublish(0.45, 0)
+            
+            self.velocityController.setLinearX(0.45)
+            
+        
             self.velocityController.lineFollower(soilHighlight, frame)
-            if(self.stateTracker.getCluesCounter() == 4):
-                self.velocityController.setBias(70)
-            elif(self.stateTracker.getCluesCounter() == 1):
+            if(self.stateTracker.getCluesCounter() == 5): # change back to 4
+                self.velocityController.setBias(120)
+            if(self.stateTracker.getCluesCounter() == 6): # change back to 5
+                self.velocityController.setBias(-60)
+            elif(self.stateTracker.getCluesCounter() == 7): # change back to 6
                 self.stateTracker.setState('YODA')
                 self.velocityController.yodaFollower(soilHighlight)
+            # self.velocityController.velocityPublish(0, 0)
 
 
         self.previousFrame = frame

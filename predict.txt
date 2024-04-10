@@ -1,8 +1,14 @@
 Predicted Character: SIZE
 Predicted Character: ATRIPLETOF
 Predicted Character: VICTIM
-Predicted Character: ZOM3IES
-Predicted Character: GRTJIDOE5
-Predicted Character: 
+Predicted Character: ZOMBIES
+Predicted Character: CRIME
+Predicted Character: SHOIVED
 Predicted Character: TIME
+Predicted Character: MIDNIGT
+Predicted Character: TINE
 Predicted Character: MIDNIGHT
+Predicted Character: PLACE
+Predicted Character: CEMETERY
+Predicted Character: MOTIVE
+Predicted Character: SELFDEFENSE
