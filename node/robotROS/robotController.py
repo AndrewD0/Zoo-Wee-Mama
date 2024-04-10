@@ -81,6 +81,8 @@ class robotController:
         cv2.waitKey(2)
 
         self.stateTracker.findState(pinkHighlight, redHighlight)
+        cv2.imshow("pink", pinkHighlight)
+        cv2.waitKey(2)
 
         print(self.stateTracker.getState())
 
