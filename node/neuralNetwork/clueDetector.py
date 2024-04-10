@@ -19,13 +19,11 @@ class clue_Detector:
         self.all_data = []
         self.lastCall_time = 0
         self.oneBoard_chars = []
+        self.half = []
         self.Prediction = cluePrediction()
 
     def getBoardCount(self):
         return self.board_count
-    
-    def getData(self):
-        return self.all_data
  
     def hsv_callback(self, data):
 
@@ -65,8 +63,8 @@ class clue_Detector:
 
         contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        min_area = 18000 # <22000
-        max_area = 26000
+        min_area = 19000 # <22000
+        max_area = 23000
 
         sorted_contour = sorted(contours, key=cv2.contourArea, reverse=True)
 
@@ -99,35 +97,20 @@ class clue_Detector:
             approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
             if len(approx) == 4 and  cv2.isContourConvex(approx) and cv2.contourArea(contour) > 20000:
                 x, y, w, h = cv2.boundingRect(contour)
-                whiteboard = trim[y: y+h, x: x+w]
-                cv2.drawContours(trim, [contour], -1, (0, 255, 0), 2)
-                whiteboard = cv2.resize(whiteboard, (1280, 720))
+                # whiteboard = trim[y: y+h, x: x+w]
+                # cv2.drawContours(trim, [contour], -1, (0, 255, 0), 2)
+                # whiteboard = cv2.resize(whiteboard, (1280, 720))
 
-                # pts1 = np.float32([[x, y], [x+w, y], [x, y+h], [x+w, y+h]])
-                # pts2 = np.float32([[0, 0], [1280, 0], [0, 720], [1280, 720]])
-                # M = cv2.getPerspectiveTransform(pts1, pts2)
-                # dst = cv2.warpPerspective(whiteboard, M, (1280, 720))
+                pts1 = np.float32([[x, y], [x+w, y], [x, y+h], [x+w, y+h]])
+                pts2 = np.float32([[0, 0], [1280, 0], [0, 720], [1280, 720]])
+                M = cv2.getPerspectiveTransform(pts1, pts2)
+                dst = cv2.warpPerspective(mask, M, (1280, 720))
 
-                # # Get the bounding box of the transformed points
-                # min_x = max(int(np.min(dst[:, 0, 0])), 0)
-                # min_y = max(int(np.min(dst[:, 0, 1])), 0)
-                # max_x = min(int(np.max(dst[:, 0, 0])), 1280)
-                # max_y = min(int(np.max(dst[:, 0, 1])), 720)
+                cv2.imshow("dst", dst)
+                cv2.waitKey(2)
 
-                # # Crop the region from the homography image based on the adjusted coordinates
-                # cropped_roi = whiteboard[min_y:max_y, min_x:max_x]
-                # cropped_roi = cv2.resize(cropped_roi, (1280, 720))
-                # cv2.imshow("cropped", cropped_roi)
-                # cv2.waitKey(2)
-
-                # lower_blue = np.array([90, 50, 50])
-                # upper_blue = np.array([130, 255, 255])
-                
-                # hsv = cv2.cvtColor(cropped_roi, cv2.COLOR_BGR2HSV)
-                # cropped_roi = cv2.inRange(hsv, lower_blue, upper_blue)
-
-                # self.words_trim(cropped_roi)
-                # break
+                self.words_trim(dst)
+                break
 
                 self.DO_SIFT(whiteboard)   
         
@@ -197,7 +180,7 @@ class clue_Detector:
 
             
     def words_trim(self, crop):
-        self.oneBoard_chars = []
+
         self.lastCall_time = rospy.get_time()
 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))       
@@ -209,7 +192,7 @@ class clue_Detector:
         contours_top, _ = cv2.findContours(top, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contours_bottom, _ = cv2.findContours(bottom, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        trim_img = cropped.copy()
+        # trim_img = cropped.copy()
         iteration = 0
         sorted_contours_top = sorted(contours_top, key=lambda c: cv2.boundingRect(c)[0])
         sorted_contours_bottom = sorted(contours_bottom, key=lambda c: cv2.boundingRect(c)[0])
@@ -217,24 +200,39 @@ class clue_Detector:
         for contour in sorted_contours_top:
             x, y, w, h = cv2.boundingRect(contour)
             if w < 650 and w > 55 and h < 650 and h > 55:
-                cv2.rectangle(trim_img, (x-1, y-1), (x + w +1, y + h + 1), (255, 0, 255), 1)
+                cv2.rectangle(top, (x-1, y-1), (x + w +1, y + h + 1), (255, 0, 255), 1)
 
-                string_img = trim_img[y-1:y+h+1, x-1:x+w+1]
+                string_img = top[y-1:y+h+1, x-1:x+w+1]
                 self.character_trim(string_img, iteration)
                 iteration += 1
         
+        print("length", len(self.half))
+        cv2.imshow("top", top)
+        # cv2.waitKey(2)
+        self.oneBoard_chars.append(self.half)
+        self.half = []
+        
+
+
         for contour in sorted_contours_bottom:
             x, y, w, h = cv2.boundingRect(contour)
             if w < 650 and w > 55 and h < 650 and h > 55:
                 # Add 360 to y-coordinate
-                y += 360
-                cv2.rectangle(trim_img, (x, y), (x + w, y + h), (255, 0, 255), 1)
-                cv2.imshow("char", trim_img)
-                cv2.waitKey(2)
+                # y += 360
+                cv2.rectangle(bottom, (x, y), (x + w, y + h), (255, 0, 255), 1)
 
-                string_img = trim_img[y:y+h, x:x+w]
+                string_img = bottom[y-1:y+h+1, x-1:x+w+1]
                 self.character_trim(string_img, iteration)
                 iteration += 1
+        print("length", len(self.half))
+        self.oneBoard_chars.append(self.half)
+        self.half = []
+       
+        self.all_data.append(self.oneBoard_chars)
+        self.oneBoard_chars = [] 
+
+        cv2.imshow("bottom", bottom)
+        cv2.waitKey(2)
 
     def character_trim(self, string_img, iteration):
         h, w = string_img.shape
@@ -243,7 +241,10 @@ class clue_Detector:
 
         if w < space:
             space = w
-        num = int(w//space)
+        num = w//space
+        if w % space != 0:
+            num += 1
+        print(num)
         
         for character in range(num):
             character_img = string_img[0:h, space * character : space * (character+1)]
@@ -254,23 +255,23 @@ class clue_Detector:
             character_resize = cv2.resize(character_blur, (120, 100))
             
             # cv2.imwrite(full_path, character_resize)
-            self.oneBoard_chars.append(character_resize)
-            self.all_data.append(self.oneBoard_chars)
+            self.half.append(character_resize)
+
+
 
     def boardUpdate(self):
-        good_chars = []
         timePassed = rospy.get_time() - self.lastCall_time
         
-        if timePassed > 0.5 and self.all_data: # if all_data is not empty
+        if timePassed > 0.75 and self.all_data: # if all_data is not empty
             good_chars = self.all_data[-1]
+            self.call_CNN(good_chars)
+    
             self.board_count +=1
             self.all_data = []
             print("GOOD CHARS !!!!!!!!!!!!!!!!!!!")
 
-            self.call_CNN(good_chars)
-    
+            
     def call_CNN(self, good_chars):
-        pass
         self.Prediction.predict(good_chars)
 
     

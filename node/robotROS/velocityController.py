@@ -13,12 +13,12 @@ class velocityController:
 
         # Velocities of the robot
         self.angularZ = 0
-        self.linearX = 0.5
+        self.linearX = 0.4
 
         self.averageCentroid = (0,0)
-        self.proportionalConstant = 0.028
+        self.proportionalConstant = 0.03
         self.error = 0
-        self.bias = 70
+        self.bias = 0
     
     def velocityPublish(self, linear, angular):
         move = Twist()
@@ -67,7 +67,7 @@ class velocityController:
         finalContours = sorted(finalContours, key = lambda c: cv2.boundingRect(c)[1])
         cv2.drawContours(frame, finalContours, -1, (0,255,0), 3)
 
-        print(len(finalContours))
+        # print(len(finalContours))
 
         if(len(finalContours) >= 2):
 
@@ -96,7 +96,7 @@ class velocityController:
         
         self.angularZ = self.proportionalConstant*self.error
 
-        print(self.angularZ)
+        # print(self.angularZ)
 
         cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
         cv2.circle(frame, self.averageCentroid, 3, (255,0,0), 3)
@@ -132,7 +132,57 @@ class velocityController:
 
         # cv2.imshow("image", image)
         # cv2.waitKey(2)
+
+    def yodaFollower(self, image):
+        # self.linearX = 0.5
+        # self.angularZ = 0.0
+        # straight1 = rospy.get_time()
+        # while(rospy.get_time() - straight1 < 0.25):
+        #     self.velocityPublish(self.linearX, self.angularZ)
+        
+        self.linearX = 0.0
+        self.angularZ = 0.5
+        turn1 = rospy.get_time()
+        while(rospy.get_time() - turn1 < 1):
+            self.velocityPublish(self.linearX, self.angularZ)
+
+        self.linearX = 0.5
+        self.angularZ = 0.0
+        straight2 = rospy.get_time()
+        while(rospy.get_time() - straight2 < 6):
+            self.velocityPublish(self.linearX, self.angularZ)
+
+        self.linearX = 0.0
+        self.angularZ = 0.5
+        turn2 = rospy.get_time()
+        while(rospy.get_time() - turn2 < 1.5):
+            self.velocityPublish(self.linearX, self.angularZ)
+
+        self.linearX = 0.5
+        self.angularZ = 0.0
+        straight3 = rospy.get_time()
+        while(rospy.get_time() - straight3 < 6):
+            self.velocityPublish(self.linearX, self.angularZ)
+
+        # self.linearX = 0.0
+        # self.angularZ = 0.5
+        # turn3 = rospy.get_time()
+        # while(rospy.get_time() - turn3 < 1.5):
+        #     self.velocityPublish(self.linearX, self.angularZ)
+
+        # self.linearX = 0.5
+        # self.angularZ = 0.0
+        # straight4 = rospy.get_time()
+        # while(rospy.get_time() - straight4 < 0.25):
+        #     self.velocityPublish(self.linearX, self.angularZ)
+
+        # self.linearX = 0.0
+        # self.angularZ = 0.5
+        # turn4 = rospy.get_time()
+        # while(rospy.get_time() - turn4 < 0.25):
+        #     self.velocityPublish(self.linearX, self.angularZ)
     
+
     def setLinearX(self, linearX):
         linearX = self.linearX
     
