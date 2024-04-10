@@ -9,8 +9,8 @@ class stateTracker:
     def __init__(self):
         self.msg = rospy.Subscriber('Output_topic', String, self.msg_callback, queue_size=10)
         self.robotDictionary = {0:'ROAD', 1:'PEDESTRIAN', 2:'ROUNDABOUT', 3:'GRASS', 4:'YODA', 5:'TUNNEL'}
-        self.robotState = self.robotDictionary[0]
-        self.robotState = self.robotDictionary[0]
+        self.robotState = self.robotDictionary[3]
+        # self.robotState = self.robotDictionary[0]
 
         self.markersCounter = 0
         self.cluesCounter = 0

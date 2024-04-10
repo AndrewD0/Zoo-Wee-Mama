@@ -7,4 +7,4 @@ node/neuralNetwork/*.h5
 Validation/*
 newCharacters/*
 node/neuralNetwork/__pycache__/*
-node/robotROS/__pycache__/*.pyc
+node/robotROS/__pycache__/*.cpython-38.pyc

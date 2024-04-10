@@ -108,7 +108,7 @@ class velocityController:
         cv2.circle(frame,(centroidX1, centroidY1), 3, (0,0,255),3)
         cv2.circle(frame, (centroidX2,centroidY2), 3, (0,0,255),3)
         cv2.imshow("frame", frame)
-        cv2.imshow("mask", image)
+        # cv2.imshow("mask", image)
         cv2.waitKey(2)
         
         self.velocityPublish(self.linearX, self.angularZ)
@@ -143,8 +143,8 @@ class velocityController:
             #     self.roundaboutStart +=1
         
         print("Error: %d AngularZ: %d" % (self.error, self.angularZ))
-        cv2.imshow("round", image)
-        cv2.waitKey(2)
+        # cv2.imshow("round", image)
+        # cv2.waitKey(2)
 
         self.velocityPublish(self.linearX, self.angularZ)
         self.velocityPublish(self.linearX, self.angularZ)

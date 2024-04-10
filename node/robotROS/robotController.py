@@ -75,14 +75,14 @@ class robotController:
         pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
         
-        cv2.imshow("redhighlight", redHighlight)
-        cv2.waitKey(2)
-        cv2.imshow("pinkhighlight", pinkHighlight)
-        cv2.waitKey(2)
+        # cv2.imshow("redhighlight", redHighlight)
+        # cv2.waitKey(2)
+        # cv2.imshow("pinkhighlight", pinkHighlight)
+        # cv2.waitKey(2)
 
         self.stateTracker.findState(pinkHighlight, redHighlight)
-        cv2.imshow("pink", pinkHighlight)
-        cv2.waitKey(2)
+        # cv2.imshow("pink", pinkHighlight)
+        # cv2.waitKey(2)
 
         print(self.stateTracker.getState())
 
@@ -151,37 +151,40 @@ class robotController:
         
             self.velocityController.lineFollower(soilHighlight, frame)
             if(self.stateTracker.getCluesCounter() == 5): # change back to 4
-                self.velocityController.setBias(120)
+                self.velocityController.setBias(140)
             if(self.stateTracker.getCluesCounter() == 6): # change back to 5
                 self.velocityController.setBias(-60)
             elif(self.stateTracker.getCluesCounter() == 7): # change back to 6
                 self.stateTracker.setState('YODA')
-                self.velocityController.yodaFollower(soilHighlight)
+                self.spawnPosition([-4.2, -2.3, 0.2, 1])
+                # self.velocityController.yodaFollower(soilHighlight)
             # self.velocityController.velocityPublish(0, 0)
+            elif(self.stateTracker.getCluesCounter() == 8):
+                self.stateTracker.setState('TUNNEL')
 
 
         self.previousFrame = frame
 
 
-def spawnPosition(self, position):
-    msg = ModelState()
-    msg.model_name = 'R1'
+    def spawnPosition(self, position):
+        msg = ModelState()
+        msg.model_name = 'R1'
 
-    msg.pose.position.x = position[0]
-    msg.pose.position.y = position[1]
-    msg.pose.position.z = position[2]
-    msg.pose.orientation.x = position[3]
-    msg.pose.orientation.y = position[4]
-    msg.pose.orientation.z = position[5]
-    msg.pose.orientation.w = position[6]
+        msg.pose.position.x = position[0]
+        msg.pose.position.y = position[1]
+        msg.pose.position.z = position[2]
+        # msg.pose.orientation.x = position[3]
+        # msg.pose.orientation.y = position[4]
+        msg.pose.orientation.w = position[3]
+        # msg.pose.orientation.w = position[6]
 
-    rospy.wait_for_service('/gazebo/set_model_state')
-    try:
-        set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
-        resp = set_state( msg )
+        rospy.wait_for_service('/gazebo/set_model_state')
+        try:
+            set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+            resp = set_state( msg )
 
-    except rospy.ServiceException:
-        print ("Service call failed")
+        except rospy.ServiceException:
+            print ("Service call failed")
 
 
 
