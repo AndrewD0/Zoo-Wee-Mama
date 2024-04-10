@@ -14,6 +14,7 @@ class stateTracker:
         self.markersCounter = 0
         self.cluesCounter = 0
         self.pedestrianReached = False
+        self.startedRoundabout = False
 
     def msg_callback(self, data):
         self.cluesCounter = int(data.data)
@@ -56,3 +57,6 @@ class stateTracker:
     
     def setCluesCounter(self, data):
         self.cluesCounter = data
+
+    def startRoundabout(self, boolean):
+        self.startedRoundabout = boolean

@@ -62,32 +62,45 @@ class robotController:
             print(e)
 
         # We use HSV for some methods
-        hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)   
+        hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)  
+        grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
 
         soilHighlight = cv2.inRange(hsvFrame, constants.LOWER_SOIL, constants.UPPER_SOIL)
         soilHighlight = cv2.medianBlur(soilHighlight, 5)
         
-        whiteHighlight = cv2.inRange(frame, constants.LOWER_WHITE, constants.UPPER_WHITE)
-        whiteHighlight = cv2.GaussianBlur(whiteHighlight, (5, 5), 0)
+        ret, whiteHighlight = cv2.threshold(grayFrame, 230,255, cv2.THRESH_BINARY)
+        whiteHighlight = cv2.GaussianBlur(whiteHighlight, (9,9),0)
 
         pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
         
         self.stateTracker.findState(pinkHighlight, redHighlight)
+
         print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
             self.velocityController.lineFollower(whiteHighlight, frame)
 
             if(self.stateTracker.getCluesCounter() == 0):
+
                 self.velocityController.setBias(60)
+
             elif(self.stateTracker.getCluesCounter() == 1):
+
                 self.velocityController.setBias(-60)
+
             elif(self.stateTracker.getCluesCounter() == 2):
-                self.velocityController.setBias(-40)
-            elif(self.stateTracker.getCluesCounter() >= 3):
-                # self.velocityController.setBias(-60)
+
+                self.velocityController.setBias(20)
+                self.velocityController.setLinearX(0.3)
+
+            elif(self.stateTracker.getCluesCounter() == 3):
+
                 self.stateTracker.setState('ROUNDABOUT')
+                self.velocityController.velocityPublish(0,0)
+                self.stateTracker.startRoundabout(True)
+                self.prevTimeCounter = 0
+                
 
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
@@ -100,7 +113,29 @@ class robotController:
                     self.stateTracker.setState('ROAD')
         
         elif(self.stateTracker.getState() == 'ROUNDABOUT'):
-            self.velocityController.roundaboutFollower(whiteHighlight, frame)
+
+            if(self.stateTracker.startedRoundabout == True):
+                if(self.prevTimeCounter == 0):
+                
+                    self.velocityController.setAngularZ(0)
+                    self.velocityController.setBias(0)
+                    self.velocityController.setError(0)
+
+                    self.velocityController.setLinearX(0.3)
+                    self.velocityController.setProportionalConstant(0.02)
+
+                    self.previousTime = rospy.get_time()
+                    self.prevTimeCounter = 1
+
+                if(rospy.get_time() < self.previousTime + 1):
+                    self.velocityController.velocityPublish(0,-1)
+                else:
+                    self.velocityController.velocityPublish(0,0)
+                    self.stateTracker.startRoundabout(False)
+            else:
+                self.velocityController.roundaboutFollower(whiteHighlight, frame)
+                if(self.stateTracker.getCluesCounter() == 4):
+                    self.stateTracker.setState('ROAD')
     
         elif(self.stateTracker.getState() == 'GRASS'):
             self.velocityController.lineFollower(soilHighlight, frame)

@@ -76,8 +76,8 @@ class clue_Detector:
             trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
             cv2.drawContours(frame, [sorted_contour[0]], -1, (0, 255, 0), 2)
 
-            cv2.imshow("trim", trim)
-            cv2.imshow("drawcontour", frame)
+           # cv2.imshow("trim", trim)
+            # cv2.imshow("drawcontour", frame)
             cv2.waitKey(2)    
             self.whiteBoard(trim)
                         
@@ -229,7 +229,7 @@ class clue_Detector:
                 # Add 360 to y-coordinate
                 y += 360
                 cv2.rectangle(trim_img, (x, y), (x + w, y + h), (255, 0, 255), 1)
-                cv2.imshow("char", trim_img)
+                # cv2.imshow("char", trim_img)
                 cv2.waitKey(2)
 
                 string_img = trim_img[y:y+h, x:x+w]
