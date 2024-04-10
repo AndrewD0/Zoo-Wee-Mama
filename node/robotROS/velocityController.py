@@ -93,6 +93,11 @@ class velocityController:
 
             self.averageCentroid = (centroidX1, centroidY1)
             self.error = self.averageCentroid[0] - centerX
+        else:
+            centroidX1 = 0
+            centroidX2 = 0
+            centroidY1 = 0
+            centroidY2 = 0
 
         
         self.angularZ = self.proportionalConstant*self.error
@@ -106,7 +111,7 @@ class velocityController:
         cv2.imshow("mask", image)
         cv2.waitKey(2)
         
-        self.velocityPublish(self.linearX, self.angularZ)
+        # self.velocityPublish(self.linearX, self.angularZ)
 
     def roundaboutFollower(self, image, frame):
         # Variables
@@ -137,7 +142,7 @@ class velocityController:
         cv2.imshow("round", image)
         cv2.waitKey(2)
 
-        self.velocityPublish(self.linearX, self.angularZ)
+        # self.velocityPublish(self.linearX, self.angularZ)
 
     def setLinearX(self, linearX):
         self.linearX = linearX
