@@ -6,3 +6,4 @@ node/robotROS/robotHelpers/__pycache__/*
 node/neuralNetwork/*.h5
 Validation/*
 newCharacters/*
+node/neuralNetwork/__pycache__/*

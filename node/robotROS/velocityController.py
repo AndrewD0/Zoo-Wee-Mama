@@ -8,17 +8,18 @@ from std_msgs.msg import String
 class velocityController:
     
     def __init__(self):
-        self.control = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=3) # Velocity publisher
+        self.control = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=1) # Velocity publisher
         self.msg = rospy.Subscriber('Output_topic', String, queue_size=10)
 
         # Velocities of the robot
         self.angularZ = 0
-        self.linearX = 0.4
+        self.linearX = 0.45
 
         self.averageCentroid = (0,0)
         self.proportionalConstant = 0.03
         self.error = 0
         self.bias = 0
+        self.roundaboutStart = 0
     
     def velocityPublish(self, linear, angular):
         move = Twist()
@@ -41,7 +42,7 @@ class velocityController:
             area = cv2.contourArea(contour)
             # print(area)
 
-            if area >= 2500:
+            if area >= 4000:
                 filteredContours.append(contour)
         
         filteredContours = sorted(filteredContours, key=cv2.contourArea, reverse=True)
@@ -59,15 +60,15 @@ class velocityController:
         finalContours = []
 
         for contour in newContours:
-            x,y,_,_ = cv2.boundingRect(contour)
-            distance = y
-            if distance < 480:
+            x,y,w,h = cv2.boundingRect(contour)
+            distanceTop = y
+            #distanceBottom = height - (y+ h)
+            if distanceTop < 480:
                 finalContours.append(contour)
         
         finalContours = sorted(finalContours, key = lambda c: cv2.boundingRect(c)[1])
         cv2.drawContours(frame, finalContours, -1, (0,255,0), 3)
 
-        # print(len(finalContours))
 
         if(len(finalContours) >= 2):
 
@@ -96,104 +97,71 @@ class velocityController:
         
         self.angularZ = self.proportionalConstant*self.error
 
-        # print(self.angularZ)
 
         cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
         cv2.circle(frame, self.averageCentroid, 3, (255,0,0), 3)
+        cv2.circle(frame,(centroidX1, centroidY1), 3, (0,0,255),3)
+        cv2.circle(frame, (centroidX2,centroidY2), 3, (0,0,255),3)
         cv2.imshow("frame", frame)
+        cv2.imshow("mask", image)
         cv2.waitKey(2)
         
         self.velocityPublish(self.linearX, self.angularZ)
 
-    def roundaboutFollower(self, image):
+    def roundaboutFollower(self, image, frame):
         # Variables
 
         height, width = image.shape
-        self.bias = 0
+        cutoffFrame = 0.9999999
 
-        for line in range(height-5, height//2, -1):
-            croppedFrame = image[line,:]
+        roiHeight = int(height * cutoffFrame)
 
-            indicesHigh = np.where(croppedFrame > 0)[0]
-            center = width // 2
+        croppedImage = image[roiHeight:height, :]
+        center = croppedImage.shape[1]//2
 
-            if(indicesHigh.size > 0):
-                firstX = min(indicesHigh)
-                lastX = max(indicesHigh)
+        indicesHigh = np.where(croppedImage > 0)
 
-                average = int((firstX+lastX)/2)
-                self.error = average - center
+        if(indicesHigh[1].size>0):
+            print("TRUE")
+            firstX = min(indicesHigh[1])
+            lastX = max(indicesHigh[1])
+            average = int((firstX+lastX)/2)
+            self.error = center-average
+            self.angularZ = self.proportionalConstant*self.error
+            if(self.roundaboutStart <= 8):
                 self.angularZ = -self.proportionalConstant*self.error
-            else:
-                continue
+                self.roundaboutStart +=1
+        
+        print(self.error)
+        print(self.angularZ)
+        cv2.imshow("round", image)
+        cv2.waitKey(2)
 
         self.velocityPublish(self.linearX, self.angularZ)
 
-
-        # cv2.imshow("image", image)
-        # cv2.waitKey(2)
-
-    def yodaFollower(self, image):
-        # self.linearX = 0.5
-        # self.angularZ = 0.0
-        # straight1 = rospy.get_time()
-        # while(rospy.get_time() - straight1 < 0.25):
-        #     self.velocityPublish(self.linearX, self.angularZ)
-        
-        self.linearX = 0.0
-        self.angularZ = 0.5
-        turn1 = rospy.get_time()
-        while(rospy.get_time() - turn1 < 1):
-            self.velocityPublish(self.linearX, self.angularZ)
-
-        self.linearX = 0.5
-        self.angularZ = 0.0
-        straight2 = rospy.get_time()
-        while(rospy.get_time() - straight2 < 6):
-            self.velocityPublish(self.linearX, self.angularZ)
-
-        self.linearX = 0.0
-        self.angularZ = 0.5
-        turn2 = rospy.get_time()
-        while(rospy.get_time() - turn2 < 1.5):
-            self.velocityPublish(self.linearX, self.angularZ)
-
-        self.linearX = 0.5
-        self.angularZ = 0.0
-        straight3 = rospy.get_time()
-        while(rospy.get_time() - straight3 < 6):
-            self.velocityPublish(self.linearX, self.angularZ)
-
-        # self.linearX = 0.0
-        # self.angularZ = 0.5
-        # turn3 = rospy.get_time()
-        # while(rospy.get_time() - turn3 < 1.5):
-        #     self.velocityPublish(self.linearX, self.angularZ)
-
-        # self.linearX = 0.5
-        # self.angularZ = 0.0
-        # straight4 = rospy.get_time()
-        # while(rospy.get_time() - straight4 < 0.25):
-        #     self.velocityPublish(self.linearX, self.angularZ)
-
-        # self.linearX = 0.0
-        # self.angularZ = 0.5
-        # turn4 = rospy.get_time()
-        # while(rospy.get_time() - turn4 < 0.25):
-        #     self.velocityPublish(self.linearX, self.angularZ)
-    
-
     def setLinearX(self, linearX):
-        linearX = self.linearX
+        self.linearX = linearX
     
     def getLinearX(self):
         return self.linearX
     
+    def setAngularZ(self, angularZ):
+        self.angularZ = angularZ
+    
+    def getAngularZ(self):
+        return self.angularZ
+    
     def setProportionalConstant(self, proportionalConstant):
-        proportionalConstant = self.proportionalConstant
+        self.proportionalConstant = proportionalConstant
     
     def getProportionalConstant(self):
         return self.proportionalConstant
+    
+    def setError(self, error):
+        self.error = error
+    
+    def getError(self):
+        return self.error
     
     def setBias(self, bias):
         self.bias = bias

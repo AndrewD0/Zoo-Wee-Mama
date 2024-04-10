@@ -64,7 +64,7 @@ class clue_Detector:
         contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         min_area = 19000 # <22000
-        max_area = 23000
+        max_area = 28000
 
         sorted_contour = sorted(contours, key=cv2.contourArea, reverse=True)
 
@@ -74,8 +74,8 @@ class clue_Detector:
             trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
             cv2.drawContours(frame, [sorted_contour[0]], -1, (0, 255, 0), 2)
 
-            cv2.imshow("trim", trim)
-            cv2.imshow("drawcontour", frame)
+           # cv2.imshow("trim", trim)
+            # cv2.imshow("drawcontour", frame)
             cv2.waitKey(2)    
             self.whiteBoard(trim)
                         

@@ -1,2 +1,8 @@
 Predicted Character: SIZE
 Predicted Character: ATRIPLETOF
+Predicted Character: VICTIM
+Predicted Character: ZOM3IES
+Predicted Character: GRTJIDOE5
+Predicted Character: 
+Predicted Character: TIME
+Predicted Character: MIDNIGHT
