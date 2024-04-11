@@ -63,10 +63,15 @@ class clue_Detector:
         #cv2.waitKey(1)
 
         contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+        
+        # if self.board_count != 9:
         min_area = 25000 # <22000
         min_ratio = 1.2
         max_ratio = 2
+        # else:
+        #     min_area = 16000
+        #     min_ratio = 1
+        #     max_ratio = 2
 
         sorted_contour = sorted(contours, key=cv2.contourArea, reverse=True)
 
@@ -214,7 +219,7 @@ class clue_Detector:
         self.lastCall_time = rospy.get_time()
 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))       
-        cropped = cv2.erode(crop, kernel, 10)
+        cropped = cv2.erode(crop, kernel, 12)
         # cropped = cv2.bilateralFilter(cropped, 11, 25, 25)
         top = cropped[0:360, 0:1280]
         bottom = cropped[360:720, 0:1280]

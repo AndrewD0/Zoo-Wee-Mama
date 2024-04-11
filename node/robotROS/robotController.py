@@ -38,6 +38,7 @@ class robotController:
         self.startTime = 0
         self.GrassTransition = False
         self.respawned = False
+        self.tunnelPassed = False
     
     def clockCallback(self, data):
         # Start timer
@@ -177,7 +178,7 @@ class robotController:
                 self.velocityController.setAngularZ(0)
                 self.velocityController.setError(0)
             else:
-
+                print(rospy.get_time())
                 self.velocityController.soilFollower(soilHighlight, frame)
 
                 
@@ -189,30 +190,74 @@ class robotController:
                     
 
                 elif(self.stateTracker.getCluesCounter() == 7): # change back to 6
+                    
                     self.stateTracker.setState('TUNNEL')
                     if self.respawned == False:
                         self.spawnPosition([-4.2, -2.3, 0.2, 1])
+                        self.prevTimeCounter = 0
                         self.respawned = True
 
                 
         elif(self.stateTracker.getState() == 'YODA'):
-            self.velocityController.yodaFollower(tunnelHighlight, boardHighlight, pinkHighlight, frame)
+            # self.velocityController.yodaFollower(tunnelHighlight, boardHighlight, pinkHighlight, frame)
             if(self.stateTracker.getCluesCounter() == 8):
                     self.stateTracker.setState('TUNNEL')
 
         elif(self.stateTracker.getState() == 'TUNNEL'):
-            self.velocityController.velocityPublish(0,0)
 
-            mountainHighlight = cv2.inRange(hsvFrame, np.array([25,30,155]), np.array([60,90,255]))
+            self.velocityController.setLinearX(0.2)
+            self.velocityController.setProportionalConstant(0.02)
+    
+            # board_contours, _ = cv2.findContours(boardHighlight, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+            
+            if(self.prevTimeCounter == 0):
+                self.velocityController.velocityPublish(0,0)
+                self.previousTime = rospy.get_time()
+                self.previousTimeCounter = 1
+            
+            if (rospy.get_time() < self.previousTime + 4):
+                self.velocityController.velocityPublish(0.5,0)
+                print("TRUE")
+                print("Current time: %d Prev Time: %d" % (rospy.get_time(), self.previousTime))
+            
+            # elif len(board_contours) > 0 == True and (rospy.get_time() -self.previousTime) > 4:
+            #     print(board_contours)
+            #     height, width = frame.shape[:2]
+            #     centerX = width // 2
+            #     centerY = height // 2
+
+            #     sorted_board = sorted(board_contours, key=cv2.contourArea, reverse=True)
+            #     moment_board = cv2.moments(sorted_board[0])
+            #     board_X = int(moment_board["m10"]/moment_board["m00"])
+            #     board_Y = int(moment_board["m01"]/moment_board["m00"])
+
+            #     self.velocityController.averageCentroid = (board_X, board_Y)
+
+            #     self.velocityController.setError(centerX - self.velocityController.averageCentroid[0])
+
+            #     cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
+            #     cv2.circle(frame, self.velocityController.averageCentroid, 3, (255,0,0), 3)
+
+            #     cv2.imshow("LAST!!!", frame)
+            #     cv2.waitKey(2)
+
+            #     self.velocityController.setAngularZ(self.velocityController.getProportionalConstant() * self.velocityController.getError())
+
+            #     self.velocityController.velocityPublish(0.3, self.velocityController.getAngularZ())
+
+
+            else:
+                mountainHighlight = cv2.inRange(hsvFrame, np.array([25,30,155]), np.array([60,90,255]))
+                self.velocityController.mountainClimber(mountainHighlight, frame)
         
             if(self.stateTracker.getCluesCounter() == 9):
-                if self.tunnelCount == True:
-                    self.previousTime = rospy.get_time()
-                    self.tunnelCount = False
-                if rospy.get_time() - self.previousTime < 3:
-                    self.velocityController.velocityPublish(0.3, 0)
-                else:
-                    self.velocityController.mountainClimber(mountainHighlight, frame)
+                self.velocityController.velocityPublish(0, 0)
+                msgStop = 'ZoWeMama,lisndrew,-1,STOP'
+                self.scoretracker.publish(msgStop)
+
+            
+
 
         self.previousFrame = frame
 
