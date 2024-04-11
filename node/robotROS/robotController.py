@@ -80,7 +80,7 @@ class robotController:
         print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
-            self.velocityController.lineFollower(whiteHighlight, frame)
+            self.velocityController.lineFollower(whiteHighlight, frame, 'ROAD')
 
             if(self.stateTracker.getCluesCounter() == 2):
                 self.velocityController.setLinearX(0.3)
@@ -147,13 +147,13 @@ class robotController:
                 self.previousTime = rospy.get_time()
                 self.prevTimeCounter = 1
 
-            if(rospy.get_time() < self.previousTime + 2):
-                self.velocityController.velocityPublish(0,0)
+            if(rospy.get_time() < self.previousTime + 0.70):
+                self.velocityController.velocityPublish(0.25,0)
                 self.velocityController.setAngularZ(0)
                 self.velocityController.setError(0)
             else:
 
-                self.velocityController.lineFollower(soilHighlight, frame)
+                self.velocityController.lineFollower(soilHighlight, frame, 'GRASS')
 
                 if(self.stateTracker.getCluesCounter() == 5): # change back to 4
                     self.velocityController.setBias(140)

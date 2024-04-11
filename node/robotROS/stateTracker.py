@@ -26,12 +26,13 @@ class stateTracker:
         # Check if we have reached the pink.
         if np.any(pinkImage[-1,:]) > 0:
             self.pinkReached = True
+            self.setState('GRASS')
         
         # Check if we have crossed the pink line.
-        if self.pinkReached == True:
-            if np.any(pinkImage[-1,:]) == 0 and self.getState() == 'ROAD':
-                self.setState('GRASS')
-                self.pinkReached = False
+        # if self.pinkReached == True:
+        #     if np.any(pinkImage[-1,:]) == 0 and self.getState() == 'ROAD':
+        #         self.setState('GRASS')
+        #         self.pinkReached = False
 
         if( np.any(redImage[-1,:]) > 0 and self.pedestrianReached == False):
             self.setState('PEDESTRIAN')

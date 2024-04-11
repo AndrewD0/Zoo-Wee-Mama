@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
+from robotHelpers import robotFunctions
 
 class velocityController:
     
@@ -27,48 +28,17 @@ class velocityController:
         move.angular.z = angular # Angular velocity setup
         self.control.publish(move) # Publish move
     
-    def lineFollower(self, mask, frame):
+    def lineFollower(self, mask, frame, state):
+
         height,width = mask.shape[:2]
         centerX = width//2
         centerY = height//2
 
         # We can make this a function!
 
-        lineContours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        finalContours = robotFunctions.findLineContours(mask, state)
 
-        filteredContours = []
-
-        for contour in lineContours:
-            area = cv2.contourArea(contour)
-            # print(area)
-
-            if area >= 4000:
-                filteredContours.append(contour)
-        
-        filteredContours = sorted(filteredContours, key=cv2.contourArea, reverse=True)
-
-        newContours = []
-
-        for contour in filteredContours:
-            for point in contour[:,0]:
-                x,y = point
-                if x == 0 or x == width - 1 or y == height - 1:
-                    newContours.append(contour)
-                    break
-        
-        newContours = sorted(newContours, key = lambda c: cv2.boundingRect(c)[1])
-        finalContours = []
-
-        for contour in newContours:
-            x,y,w,h = cv2.boundingRect(contour)
-            distanceTop = y
-            #distanceBottom = height - (y+ h)
-            if distanceTop < 480:
-                finalContours.append(contour)
-        
-        finalContours = sorted(finalContours, key = lambda c: cv2.boundingRect(c)[1])
-        cv2.drawContours(frame, finalContours, 0, (0,255,0), 3)
-        cv2.drawContours(frame, finalContours, 1, (0,255,0), 3)
+        print("Final contours: %d" % len(finalContours))
 
 
         if(len(finalContours) >= 2):
@@ -83,6 +53,9 @@ class velocityController:
             
             self.averageCentroid = (int((centroidX1+centroidX2)/2-self.bias),int((centroidY1+centroidY2)/2))
             self.error = centerX - self.averageCentroid[0]
+
+            cv2.drawContours(frame, finalContours, 0, (0,255,0), 3)
+            cv2.drawContours(frame, finalContours, 1, (0,255,0), 3)
                 
         elif(len(finalContours) == 1):
             momentOne = cv2.moments(finalContours[0])
@@ -94,6 +67,8 @@ class velocityController:
 
             self.averageCentroid = (centroidX1, centroidY1)
             self.error = self.averageCentroid[0] - centerX
+
+            cv2.drawContours(frame, finalContours, 0, (0,255,0), 3)
         else:
             centroidX1 = 0
             centroidX2 = 0
@@ -147,7 +122,6 @@ class velocityController:
         # cv2.imshow("round", image)
         # cv2.waitKey(2)
 
-        self.velocityPublish(self.linearX, self.angularZ)
         self.velocityPublish(self.linearX, self.angularZ)
 
     def setLinearX(self, linearX):

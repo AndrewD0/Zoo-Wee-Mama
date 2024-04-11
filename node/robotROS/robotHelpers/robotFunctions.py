@@ -37,3 +37,55 @@ def pedestrianEnd(redImage, pedestrianReached):
         else:
              return False
 
+def findLineContours(mask, state):
+
+    height,width = mask.shape[:2]
+
+    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    filteredContours = []
+
+    for contour in contours:
+        area = cv2.contourArea(contour)
+
+        if area >= 4000:
+            filteredContours.append(contour)
+        
+    filteredContours = sorted(filteredContours, key=cv2.contourArea, reverse=True)
+
+    lineContours = []
+
+    for contour in filteredContours:
+        for point in contour[:,0]:
+            x,y = point
+            if x == 0 or x == width - 1 or y == height - 1:
+                lineContours.append(contour)
+                break
+        
+    lineContours = sorted(lineContours, key = lambda c: cv2.boundingRect(c)[1])
+
+
+    grassContours = []
+
+    for contour in lineContours:
+        x,y,w,h = cv2.boundingRect(contour)
+        distanceTop = y
+        area = cv2.contourArea(contour)
+        extent = float((area)/(w*h))
+
+        #print("DistanceTop: %d Extent: %4f Base: %d Height: %d" % (distanceTop, extent, w, h))
+        if distanceTop < 480:
+            grassContours.append(contour)
+
+    finalContours = []
+
+    if(state == 'ROAD'):
+        finalContours = lineContours
+    elif(state == 'GRASS'):
+        finalContours = grassContours
+        
+    finalContours = sorted(finalContours, key = lambda c: cv2.boundingRect(c)[1])
+    return finalContours
+     
+     
+
