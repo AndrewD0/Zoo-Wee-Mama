@@ -27,14 +27,14 @@ class velocityController:
         move.angular.z = angular # Angular velocity setup
         self.control.publish(move) # Publish move
     
-    def lineFollower(self, image, frame):
-        height,width = image.shape[:2]
+    def lineFollower(self, mask, frame):
+        height,width = mask.shape[:2]
         centerX = width//2
         centerY = height//2
 
         # We can make this a function!
 
-        lineContours, hierarchy = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        lineContours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         filteredContours = []
 
@@ -67,7 +67,8 @@ class velocityController:
                 finalContours.append(contour)
         
         finalContours = sorted(finalContours, key = lambda c: cv2.boundingRect(c)[1])
-        cv2.drawContours(frame, finalContours, -1, (0,255,0), 3)
+        cv2.drawContours(frame, finalContours, 0, (0,255,0), 3)
+        cv2.drawContours(frame, finalContours, 1, (0,255,0), 3)
 
 
         if(len(finalContours) >= 2):
@@ -102,16 +103,16 @@ class velocityController:
         
         self.angularZ = self.proportionalConstant*self.error
 
+        print("AngularZ: %d" % self.angularZ)
+
 
         cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
         cv2.circle(frame, self.averageCentroid, 3, (255,0,0), 3)
         cv2.circle(frame,(centroidX1, centroidY1), 3, (0,0,255),3)
         cv2.circle(frame, (centroidX2,centroidY2), 3, (0,0,255),3)
         cv2.imshow("frame", frame)
-        # cv2.imshow("mask", image)
         cv2.waitKey(2)
         
-        self.velocityPublish(self.linearX, self.angularZ)
         self.velocityPublish(self.linearX, self.angularZ)
 
     def roundaboutFollower(self, image, frame):

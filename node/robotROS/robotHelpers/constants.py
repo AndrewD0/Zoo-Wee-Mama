@@ -4,8 +4,8 @@ import numpy as np
 # Thresholds
 
 # Detecting white lines
-LOWER_WHITE = np.array([235,235,235])
-UPPER_WHITE = np.array([255,255,255])
+LOWER_WHITE = 230
+UPPER_WHITE = 255
 
 # Detecting the road in HSV
 LOWER_ROAD = np.array([0, 0, 0])
