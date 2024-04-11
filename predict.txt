@@ -1,9 +1,6 @@
-Predicted Character: MTIVE
-Predicted Character: SELFDEFENSE
-Predicted Character: NOWERXV
-Predicted Character: WEPIN
-Predicted Character: NCEPIELD
-Predicted Character: WEPON
-Predicted Character: FOCEFIELD
-Predicted Character: WEHI
-Predicted Character: FOCEFIELD
+Predicted Character: SIZE
+Predicted Character: 5S5S5S
+Predicted Character: VICTIM
+Predicted Character: 3B3B3B3B
+Predicted Character: CRIME
+Predicted Character: OQIIOQQIIOQO

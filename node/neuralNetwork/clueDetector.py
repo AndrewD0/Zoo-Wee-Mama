@@ -111,8 +111,8 @@ class clue_Detector:
                 M = cv2.getPerspectiveTransform(pts1, pts2)
                 dst = cv2.warpPerspective(mask, M, (1280, 720))
 
-                cv2.imshow("dst", dst)
-                cv2.waitKey(2)
+                # cv2.imshow("dst", dst)
+                # cv2.waitKey(2)
 
                 self.words_trim(dst)
                 break
@@ -188,8 +188,8 @@ class clue_Detector:
 
         self.lastCall_time = rospy.get_time()
 
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))       
-        cropped = cv2.erode(crop, kernel, 1)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))       
+        cropped = cv2.erode(crop, kernel, 2)
         # cropped = cv2.dilate(crop, kernel, iterations=1)
         top = cropped[0:360, 0:1280]
         bottom = cropped[360:720, 0:1280]
@@ -205,13 +205,13 @@ class clue_Detector:
         for contour in sorted_contours_top:
             x, y, w, h = cv2.boundingRect(contour)
             if w < 650 and w > 55 and h < 650 and h > 55:
-                # cv2.rectangle(top, (x-1, y-1), (x + w +1, y + h + 1), (255, 0, 255), 1)
+                cv2.rectangle(top, (x-1, y-1), (x + w +1, y + h + 1), (255, 0, 255), 1)
 
                 string_img = top[y-1:y+h+1, x-1:x+w+1]
                 self.character_trim(string_img, iteration)
                 iteration += 1
         
-        print("length", len(self.half))
+        # print("length", len(self.half))
         cv2.imshow("top", top)
         # cv2.waitKey(2)
         self.oneBoard_chars.append(self.half)
@@ -224,12 +224,13 @@ class clue_Detector:
             if w < 650 and w > 55 and h < 650 and h > 55:
                 # Add 360 to y-coordinate
                 # y += 360
-                # cv2.rectangle(bottom, (x, y), (x + w, y + h), (255, 0, 255), 1)
+                cv2.rectangle(bottom, (x, y), (x + w, y + h), (255, 0, 255), 1)
 
                 string_img = bottom[y-1:y+h+1, x-1:x+w+1]
+
                 self.character_trim(string_img, iteration)
                 iteration += 1
-        print("length", len(self.half))
+        # print("length", len(self.half))
         self.oneBoard_chars.append(self.half)
         self.half = []
        
@@ -244,22 +245,31 @@ class clue_Detector:
         space = 120
         folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/newCharacters/"
 
-        if w < space:
-            space = w
-        num = w//space
-        if w // space == 0:
-            num += 1
+        # if w < space and w != 0:
+        #     space = w
+        # else:
+        #     print("width: ", w)
+        # num = w//space
+        # if w // space == 0:
+        #     num += 1
         # print(num)
+
+        num = 1
+        if space < w < 270:
+            num = 2
+        elif 270 < w < 400:
+            num = 3
+        space = w // num
         
         for character in range(num):
             character_img = string_img[0:h, space * character : space * (character+1)]
             file_name = str(self.board_count) + str(iteration) + str(character) + '.jpg'
-            # full_path = folder_path + file_name
+            full_path = folder_path + file_name
         
             character_blur = cv2.bilateralFilter(character_img, 9, 75, 75)
             character_resize = cv2.resize(character_blur, (120, 100))
             
-            # cv2.imwrite(full_path, character_resize)
+            cv2.imwrite(full_path, character_resize)
             self.half.append(character_resize)
 
 
