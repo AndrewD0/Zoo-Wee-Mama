@@ -31,9 +31,9 @@ class stateTracker:
         if self.pinkReached == True and np.any(pinkImage[-1,:]) == 0:
             self.pinkReached = False
 
-        if np.any(pinkImage[-1,:]) > 0 and self.pinkReached == True:
-            self.pinkReached = True
-            self.setState('TUNNEL')
+        # if np.any(pinkImage[-1,:]) > 0 and self.pinkReached == True:
+        #     self.pinkReached = True
+        #     self.setState('TUNNEL')
         
         # Check if we have crossed the pink line.
         # if self.pinkReached == True:

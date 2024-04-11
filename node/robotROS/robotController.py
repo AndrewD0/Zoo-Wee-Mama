@@ -189,7 +189,7 @@ class robotController:
                     
 
                 elif(self.stateTracker.getCluesCounter() == 7): # change back to 6
-                    # self.stateTracker.setState('YODA')
+                    self.stateTracker.setState('TUNNEL')
                     if self.respawned == False:
                         self.spawnPosition([-4.2, -2.3, 0.2, 1])
                         self.respawned = True
@@ -202,6 +202,10 @@ class robotController:
 
         elif(self.stateTracker.getState() == 'TUNNEL'):
             self.velocityController.velocityPublish(0,0)
+
+
+            mountainHighlight = cv2.inRange(hsvFrame, np.array([25,30,155]), np.array([60,90,255]))
+            self.velocityController.mountainClimber(mountainHighlight, frame)
         
             if(self.stateTracker.getCluesCounter() == 9):
                 self.velocityController.velocityPublish(0, 0)
