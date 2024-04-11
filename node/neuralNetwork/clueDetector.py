@@ -294,7 +294,7 @@ class clue_Detector:
         time_threshold = 0.75
         
         if self.board_count == 3 or self.board_count == 8 or self.board_count == 9:
-            time_threshold = 0.045
+            time_threshold = 0.05
         else:
             time_threshold = 0.75
         
