@@ -88,4 +88,55 @@ def findLineContours(mask, state):
     return finalContours
      
      
+def findGrassContours(mask):
 
+    height,width = mask.shape[:2]
+
+    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    filteredContours = []
+
+    for contour in contours:
+        area = cv2.contourArea(contour)
+
+        if area >= 3000:
+            filteredContours.append(contour)
+        
+    filteredContours = sorted(filteredContours, key=cv2.contourArea, reverse=True)
+
+    filteredMask = np.zeros_like(mask)
+    cv2.drawContours(filteredMask, filteredContours, -1 ,(255,255,255), thickness= cv2.FILLED)
+    #cv2.imshow("filtered", filteredMask)
+
+    lineContours = []
+
+    for contour in filteredContours:
+        for point in contour[:,0]:
+            x,y = point
+            if x == 0 or x == width - 1 or y == height - 1:
+                lineContours.append(contour)
+                break
+        
+    lineContours = sorted(lineContours, key = lambda c: cv2.boundingRect(c)[1])
+
+    lineMask = np.zeros_like(mask)
+    cv2.drawContours(lineMask, lineContours, -1 ,(255,255,255), thickness= cv2.FILLED)
+    #cv2.imshow("LineMask", lineMask)
+    cv2.waitKey(2)
+
+
+    grassContours = []
+    print("LineContours: %d" % len(lineContours))
+
+    for contour in lineContours:
+        x,y,w,h = cv2.boundingRect(contour)
+        distanceTop = y
+        area = cv2.contourArea(contour)
+        extent = float((area)/(w*h))
+
+        print("DistanceTop: %d Extent: %4f Base: %d Height: %d" % (distanceTop, extent, w, h))
+        if distanceTop < 460:
+            grassContours.append(contour)
+        
+    grassContours = sorted(grassContours, key = lambda c: cv2.boundingRect(c)[1])
+    return grassContours

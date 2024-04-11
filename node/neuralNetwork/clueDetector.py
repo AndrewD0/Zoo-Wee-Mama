@@ -212,7 +212,7 @@ class clue_Detector:
                 iteration += 1
         
         # print("length", len(self.half))
-        cv2.imshow("top", top)
+        #cv2.imshow("top", top)
         # cv2.waitKey(2)
         self.oneBoard_chars.append(self.half)
         self.half = []
@@ -237,7 +237,7 @@ class clue_Detector:
         self.all_data.append(self.oneBoard_chars)
         self.oneBoard_chars = [] 
 
-        cv2.imshow("bottom", bottom)
+        #cv2.imshow("bottom", bottom)
         cv2.waitKey(2)
 
     def character_trim(self, string_img, iteration):

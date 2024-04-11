@@ -67,7 +67,7 @@ class robotController:
         grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
 
         soilHighlight = cv2.inRange(hsvFrame, constants.LOWER_SOIL, constants.UPPER_SOIL)
-        soilHighlight = cv2.medianBlur(soilHighlight, 7)
+        #soilHighlight = cv2.GaussianBlur(soilHighlight, (3,3), 0)
         
         ret, whiteHighlight = cv2.threshold(grayFrame, constants.LOWER_WHITE, constants.UPPER_WHITE, cv2.THRESH_BINARY)
         whiteHighlight = cv2.GaussianBlur(whiteHighlight, (9,9),0)
@@ -147,13 +147,13 @@ class robotController:
                 self.previousTime = rospy.get_time()
                 self.prevTimeCounter = 1
 
-            if(rospy.get_time() < self.previousTime + 0.70):
+            if(rospy.get_time() < self.previousTime + 0.60):
                 self.velocityController.velocityPublish(0.25,0)
                 self.velocityController.setAngularZ(0)
                 self.velocityController.setError(0)
             else:
 
-                self.velocityController.lineFollower(soilHighlight, frame, 'GRASS')
+                self.velocityController.soilFollower(soilHighlight, frame)
 
                 if(self.stateTracker.getCluesCounter() == 5): # change back to 4
                     self.velocityController.setBias(140)

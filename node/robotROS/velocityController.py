@@ -124,6 +124,70 @@ class velocityController:
 
         self.velocityPublish(self.linearX, self.angularZ)
 
+    def soilFollower(self, mask, frame):
+
+        height,width = mask.shape[:2]
+        centerX = width//2
+        centerY = height//2
+
+        # We can make this a function!
+
+        finalContours = robotFunctions.findGrassContours(mask)
+
+        print("Final contours: %d" % len(finalContours))
+
+
+        if(len(finalContours) >= 2):
+
+            momentOne = cv2.moments(finalContours[0])
+            momentTwo = cv2.moments(finalContours[1])
+
+            centroidX1 = int(momentOne["m10"]/momentOne["m00"])
+            centroidY1 = int(momentOne["m01"]/momentOne["m00"])
+            centroidX2 = int(momentTwo["m10"]/momentTwo["m00"])
+            centroidY2 = int(momentTwo["m01"]/momentTwo["m00"])
+            
+            self.averageCentroid = (int((centroidX1+centroidX2)/2-self.bias),int((centroidY1+centroidY2)/2))
+            self.error = centerX - self.averageCentroid[0]
+
+            cv2.drawContours(frame, finalContours, 0, (0,255,0), 3)
+            cv2.drawContours(frame, finalContours, 1, (0,255,0), 3)
+                
+        elif(len(finalContours) == 1):
+            momentOne = cv2.moments(finalContours[0])
+
+            centroidX1 = int(momentOne["m10"]/momentOne["m00"])
+            centroidY1 = int(momentOne["m01"]/momentOne["m00"])
+            centroidX2 = 0
+            centroidY2 = 0
+
+            self.averageCentroid = (centroidX1, centroidY1)
+            self.error = self.averageCentroid[0] - centerX
+
+            cv2.drawContours(frame, finalContours, 0, (0,255,0), 3)
+        else:
+            centroidX1 = 0
+            centroidX2 = 0
+            centroidY1 = 0
+            centroidY2 = 0
+
+        
+        self.angularZ = self.proportionalConstant*self.error
+
+        print("AngularZ: %d" % self.angularZ)
+
+
+        cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
+        cv2.circle(frame, self.averageCentroid, 3, (255,0,0), 3)
+        cv2.circle(frame,(centroidX1, centroidY1), 3, (0,0,255),3)
+        cv2.circle(frame, (centroidX2,centroidY2), 3, (0,0,255),3)
+        cv2.imshow("frame", frame)
+        cv2.imshow("mask", mask)
+        cv2.waitKey(2)
+        
+        self.velocityPublish(self.linearX, self.angularZ)
+
+
     def setLinearX(self, linearX):
         self.linearX = linearX
     
