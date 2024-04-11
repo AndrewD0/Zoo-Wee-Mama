@@ -180,11 +180,11 @@ class robotController:
 
                 self.velocityController.soilFollower(soilHighlight, frame)
 
-                if(self.stateTracker.getCluesCounter() == 5): # change back to 4
-                    self.velocityController.setBias(130)
-                    self.velocityController.setLinearX(0.3)
+                
+                self.velocityController.setBias(130)
+                self.velocityController.setLinearX(0.3)
             
-                elif(self.stateTracker.getCluesCounter() == 6): # change back to 5
+                if(self.stateTracker.getCluesCounter() == 6): # change back to 5
                     self.velocityController.setBias(-40)
                     
 
@@ -204,7 +204,13 @@ class robotController:
             self.velocityController.velocityPublish(0,0)
         
             if(self.stateTracker.getCluesCounter() == 9):
-                self.velocityController.velocityPublish(0, 0)
+                if self.tunnelCount == True:
+                    self.previousTime = rospy.get_time()
+                    self.tunnelCount = False
+                if rospy.get_time() - self.previousTime < 5:
+                    self.velocityController.velocityPublish(0.3, 0)
+                else:
+                    self.velocityController.mountainClimber(, frame)
 
         self.previousFrame = frame
 

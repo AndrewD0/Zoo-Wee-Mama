@@ -139,7 +139,9 @@ class clue_Detector:
                     self.words_trim(dst)
                     break
 
-                # self.DO_SIFT(whiteboard)   
+                # self.DO_SIFT(whiteboard) 
+    def manual_trim(self, image):
+        pass
         
 
     def DO_SIFT(self, frame):
@@ -211,7 +213,7 @@ class clue_Detector:
         self.lastCall_time = rospy.get_time()
 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))       
-        cropped = cv2.erode(crop, kernel, 5)
+        cropped = cv2.erode(crop, kernel, 6)
         cropped = cv2.bilateralFilter(cropped, 11, 25, 25)
         top = cropped[0:360, 0:1280]
         bottom = cropped[360:720, 0:1280]
@@ -226,7 +228,8 @@ class clue_Detector:
         
         for contour in sorted_contours_top:
             x, y, w, h = cv2.boundingRect(contour)
-            if w < 650 and w > 55 and h < 650 and h > 55:
+            # if w < 650 and w > 55 and h < 650 and h > 55:
+            if w < 650 and h < 650 and 1.3 < w/h < 2:
                 cv2.rectangle(top, (x-1, y-1), (x + w +1, y + h + 1), (255, 0, 255), 1)
 
                 string_img = top[y-1:y+h+1, x-1:x+w+1]
@@ -243,7 +246,8 @@ class clue_Detector:
 
         for contour in sorted_contours_bottom:
             x, y, w, h = cv2.boundingRect(contour)
-            if w < 650 and w > 55 and h < 650 and h > 55:
+            # if w < 650 and w > 55 and h < 650 and h > 55:
+            if w < 650 and h < 650 and 1.3 < w/h < 2:
                 # Add 360 to y-coordinate
                 # y += 360
                 cv2.rectangle(bottom, (x, y), (x + w, y + h), (255, 0, 255), 1)
@@ -270,12 +274,8 @@ class clue_Detector:
 
         if w < space and w != 0:
             space = w
-        if w > space and w != 0:
-            space = w // 2
         
         num = w // space
-        print("w:", w)
-        print("num: ", num)
         
         for character in range(num):
             character_img = string_img[0:h, space * character : space * (character+1)]
