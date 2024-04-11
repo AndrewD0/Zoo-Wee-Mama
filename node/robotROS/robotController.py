@@ -126,7 +126,7 @@ class robotController:
                     self.velocityController.setBias(0)
                     self.velocityController.setError(0)
 
-                    self.velocityController.setLinearX(0.25)
+                    self.velocityController.setLinearX(0.15)
                     self.velocityController.setProportionalConstant(0.03)
 
                     self.previousTime = rospy.get_time()
@@ -157,6 +157,8 @@ class robotController:
             #     self.GrassTransition = True
             #     while(rospy.get_time() - previous_time < 0.5):
             #         self.velocityController.velocityPublish(0.45, 0)
+
+            self.velocityController.setProportionalConstant(0.02)
             
             if(self.prevTimeCounter == 0):
                 self.previousTime = rospy.get_time()
@@ -171,7 +173,8 @@ class robotController:
                 self.velocityController.soilFollower(soilHighlight, frame)
 
                 if(self.stateTracker.getCluesCounter() == 5): # change back to 4
-                    self.velocityController.setBias(140)
+                    #self.velocityController.setBias(140)
+                    pass
             
                 elif(self.stateTracker.getCluesCounter() == 6): # change back to 5
                     self.velocityController.setBias(-60)
