@@ -134,9 +134,79 @@ def findGrassContours(mask):
         area = cv2.contourArea(contour)
         extent = float((area)/(w*h))
 
-        print("DistanceTop: %d Extent: %4f Base: %d Height: %d" % (distanceTop, extent, w, h))
+        #print("DistanceTop: %d Extent: %4f Base: %d Height: %d" % (distanceTop, extent, w, h))
         if distanceTop < 460:
             grassContours.append(contour)
         
     grassContours = sorted(grassContours, key = lambda c: cv2.boundingRect(c)[1])
     return grassContours
+
+def getValue(frame):
+    x,y,w,h= 0, 400, 1280, 100
+    sky_blue_low = np.array([70, 50, 50])
+    sky_blue_up = np.array([150, 255, 255])
+
+    skyRemoved = cv2.inRange(frame, sky_blue_low, sky_blue_up)
+
+    frameInterest = frame[y:720, x:x+w]
+
+    valueChannels = frameInterest[:,:,2]
+
+    averageValue = np.mean(valueChannels)
+
+    print("Average: %d" % averageValue)
+
+    #cv2.imshow("roi",frameInterest)
+    #cv2.imshow("frames", skyRemoved)
+    cv2.waitKey(2)
+
+    return averageValue
+
+def brightenFrame(frame):
+    groundValue = 170
+    comparingValue = getValue(frame)
+
+    factor = float(groundValue/comparingValue)
+
+    frame[:,:,2]= np.clip(frame[:,:,2]*factor,0,255)
+
+    return frame
+
+def findMountainContours(mask):
+
+    height,width = mask.shape[:2]
+    
+    mask = cv2.GaussianBlur(mask, (1,1), 0)
+    mask = cv2.dilate(mask, (5,5), iterations = 3)
+    maxHeight = 360
+    bottomHeight = 60
+    
+    roiFrame = mask[height-maxHeight:height-bottomHeight, 0: width//2]
+
+    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    filteredContours = []
+
+    for contour in contours:
+        area = cv2.contourArea(contour)
+
+        if area >= 3000:
+            filteredContours.append(contour)
+        
+    finalContours = []
+
+    for contour in filteredContours:
+        x,_,_,_ = cv2.boundingRect(contour)
+        distance = x
+        if (distance < 600):
+            finalContours.append(contour)
+        
+    finalContours = sorted(finalContours, key=cv2.contourArea, reverse=True)
+    finalMask = np.zeros_like(mask)
+    cv2.drawContours(finalMask, finalContours, -1 ,(255,255,255), thickness= cv2.FILLED)
+    cv2.imshow("filtered mask", finalMask)
+    cv2.waitKey(2)
+
+    return finalContours
+
+    

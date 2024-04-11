@@ -71,7 +71,7 @@ class robotController:
 
         soilHighlight = cv2.inRange(hsvFrame, constants.LOWER_SOIL, constants.UPPER_SOIL)
         #soilHighlight = cv2.GaussianBlur(soilHighlight, (3,3), 0)
-        
+     
         ret, whiteHighlight = cv2.threshold(grayFrame, constants.LOWER_WHITE, constants.UPPER_WHITE, cv2.THRESH_BINARY)
         whiteHighlight = cv2.GaussianBlur(whiteHighlight, (9,9),0)
 
@@ -79,9 +79,11 @@ class robotController:
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
 
         tunnelHighlight = cv2.inRange(hsvFrame, constants.LOWER_TUNNEL, constants.UPPER_TUNNEL)
-        cv2.imshow("tunnel", tunnelHighlight)
-        cv2.imshow("soil", soilHighlight)
-        cv2.waitKey(2)
+        #cv2.imshow("tunnel", tunnelHighlight)
+        #cv2.imshow("hsv", hsvFrame)
+        #cv2.imshow("soil", soilHighlight)
+        #cv2.imshow("frame", frame)
+        #cv2.waitKey(2)
 
         self.stateTracker.findState(pinkHighlight, redHighlight)
 
@@ -187,7 +189,13 @@ class robotController:
                 elif(self.stateTracker.getCluesCounter() == 8):
                     self.stateTracker.setState('TUNNEL')
         elif(self.stateTracker.getState() == 'TUNNEL'):
-            pass
+
+            self.velocityController.setLinearX(0.2)
+            self.velocityController.setProportionalConstant(0.010)
+
+            mountainHighlight = cv2.inRange(hsvFrame,np.array([25,30,155]),np.array([60,90,255]))
+            self.velocityController.mountainClimber(mountainHighlight,frame)
+
 
         self.previousFrame = frame
 

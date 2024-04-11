@@ -130,7 +130,7 @@ class velocityController:
 
     def soilFollower(self, mask, frame):
 
-        height,width = mask.shape[:2]
+        height,width = frame.shape[:2]
         centerX = width//2
         centerY = height//2
 
@@ -189,6 +189,49 @@ class velocityController:
         cv2.imshow("mask", mask)
         cv2.waitKey(2)
         
+        self.velocityPublish(self.linearX, self.angularZ)
+    
+    def mountainClimber(self, mask, frame):
+        height,width = frame.shape[:2]
+        centerX = width//2
+        centerY = height//2
+        threshold = 300
+
+        # We can make this a function!
+
+        finalContours = robotFunctions.findMountainContours(mask)
+
+        print("Final contours: %d" % len(finalContours))
+
+
+        if(len(finalContours) >= 1):
+
+            moment = cv2.moments(finalContours[0])
+
+            centroidX1 = int(moment["m10"]/moment["m00"])
+            centroidY1 = int(moment["m01"]/moment["m00"])
+            
+            centroidX1 = int(moment["m10"]/moment["m00"])
+            centroidY1 = int(moment["m01"]/moment["m00"])
+            self.averageCentroid=(centroidX1,centroidY1)
+            self.error = (centerX - self.averageCentroid[0])-threshold
+
+            cv2.drawContours(frame, finalContours, 0, (0,255,0), 3)
+        else:
+            centroidX1 = 0
+            centroidX2 = 0
+
+        
+        self.angularZ = self.proportionalConstant*self.error
+
+        print("AngularZ: %d Error: %d" % (self.angularZ, self.error))
+
+
+        cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
+        cv2.circle(frame, self.averageCentroid, 3, (255,0,0), 3)
+        cv2.imshow("frame", frame)
+        cv2.imshow("mask", mask)
+        cv2.waitKey(2)
         self.velocityPublish(self.linearX, self.angularZ)
 
 
