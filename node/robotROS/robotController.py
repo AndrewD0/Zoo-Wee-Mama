@@ -78,8 +78,16 @@ class robotController:
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
 
         tunnelHighlight = cv2.inRange(hsvFrame, constants.LOWER_TUNNEL, constants.UPPER_TUNNEL)
-        cv2.imshow("tunnel", tunnelHighlight)
-        cv2.imshow("soil", soilHighlight)
+        
+        mask_blue = cv2.inRange(hsvFrame, constants.LOWER_BLUE, constants.UPPER_BLUE)
+        blue_region = cv2.bitwise_and(frame, frame, mask=mask_blue)
+        sky_mask = cv2.inRange(hsvFrame, constants.LOWER_SKY, constants.UPPER_SKY)
+        no_sky = cv2.bitwise_not(sky_mask)
+        filtered = cv2.bitwise_and(blue_region, blue_region, mask=no_sky)
+        boardHighlight = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)
+        
+        cv2.imshow("tunnel", boardHighlight)
+        # cv2.imshow("soil", soilHighlight)
         cv2.waitKey(2)
 
         self.stateTracker.findState(pinkHighlight, redHighlight)
@@ -134,8 +142,8 @@ class robotController:
 
                 # Timer
                 if(rospy.get_time() < self.previousTime + 1):
-                    self.velocityController.velocityPublish(0,-1.1)
-                elif(rospy.get_time() < self.previousTime + 2.5):
+                    self.velocityController.velocityPublish(0,-1.05)
+                elif(rospy.get_time() < self.previousTime + 2.53):
                         self.velocityController.velocityPublish(0.3, 0)
 
                 else:
@@ -147,7 +155,7 @@ class robotController:
                     self.stateTracker.setState('ROAD')
 
                     self.velocityController.setProportionalConstant(0.03)
-                    self.velocityController.setLinearX(0.45)
+                    self.velocityController.setLinearX(0.4)
 
                     self.prevTimeCounter = 0
     
@@ -157,7 +165,7 @@ class robotController:
             #     self.GrassTransition = True
             #     while(rospy.get_time() - previous_time < 0.5):
             #         self.velocityController.velocityPublish(0.45, 0)
-
+            self.velocityController.setLinearX(0.35)
             self.velocityController.setProportionalConstant(0.02)
             
             if(self.prevTimeCounter == 0):
@@ -173,20 +181,30 @@ class robotController:
                 self.velocityController.soilFollower(soilHighlight, frame)
 
                 if(self.stateTracker.getCluesCounter() == 5): # change back to 4
-                    #self.velocityController.setBias(140)
-                    pass
+                    self.velocityController.setBias(130)
+                    self.velocityController.setLinearX(0.3)
             
                 elif(self.stateTracker.getCluesCounter() == 6): # change back to 5
-                    self.velocityController.setBias(-60)
+                    self.velocityController.setBias(-40)
+                    
 
                 elif(self.stateTracker.getCluesCounter() == 7): # change back to 6
-                    self.stateTracker.setState('YODA')
-                    self.spawnPosition([-4.2, -2.3, 0.2, 1])
+                    # self.stateTracker.setState('YODA')
+                    if self.respawned == False:
+                        self.spawnPosition([-4.2, -2.3, 0.2, 1])
+                        self.respawned = True
 
-                elif(self.stateTracker.getCluesCounter() == 8):
+                
+        elif(self.stateTracker.getState() == 'YODA'):
+            self.velocityController.yodaFollower(tunnelHighlight, boardHighlight, pinkHighlight, frame)
+            if(self.stateTracker.getCluesCounter() == 8):
                     self.stateTracker.setState('TUNNEL')
+
         elif(self.stateTracker.getState() == 'TUNNEL'):
-            pass
+            self.velocityController.velocityPublish(0,0)
+        
+            if(self.stateTracker.getCluesCounter() == 9):
+                self.velocityController.velocityPublish(0, 0)
 
         self.previousFrame = frame
 

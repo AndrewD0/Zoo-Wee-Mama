@@ -14,7 +14,10 @@ class cluePrediction:
         print("ready!!!!!")
         self.output_file = open("/home/fizzer/ros_ws/src/Zoo-Wee-Mama/predict.txt", "w")
         self.scoretracker = rospy.Publisher('/score_tracker', String, queue_size=10)
-
+        self.data = ""
+    def score_callback(self, data):
+        self.data = data.data
+    
     def predict(self, char_data): # one trimmed character at a time
         clue_list = []
         for i in char_data:
@@ -56,7 +59,8 @@ class cluePrediction:
 
             msg = f'ZoWeMama,lisndrew,{ID},{value}'
 
-            self.scoretracker.publish(msg)
+            if msg != self.data:
+                self.scoretracker.publish(msg)
             pred_dict.clear()
 
 

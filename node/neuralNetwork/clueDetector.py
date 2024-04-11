@@ -64,8 +64,7 @@ class clue_Detector:
         contours, _ = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         min_area = 25000 # <22000
-        max_area = 25000
-        min_ratio = 1.35
+        min_ratio = 1.2
         max_ratio = 2
 
         sorted_contour = sorted(contours, key=cv2.contourArea, reverse=True)
@@ -79,9 +78,9 @@ class clue_Detector:
                 trim = cv2.resize(trim, (1280, 720), interpolation=cv2.INTER_CUBIC)
                 # cv2.drawContours(frame, [sorted_contour[0]], -1, (0, 255, 0), 2)
 
-            # cv2.imshow("trim", trim)
-            # cv2.imshow("drawcontour", frame)
-            # cv2.waitKey(2)    
+                # cv2.imshow("trim", trim)
+                # cv2.imshow("drawcontour", frame)
+                cv2.waitKey(2)    
                 self.whiteBoard(trim)
                         
     def whiteBoard(self, trim):
@@ -100,22 +99,45 @@ class clue_Detector:
         for contour in sorted_contour:
             perimeter = cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
-            if len(approx) == 4 and  cv2.isContourConvex(approx) and cv2.contourArea(contour) > 20000:
+            if len(approx) == 4 and cv2.isContourConvex(approx):
                 x, y, w, h = cv2.boundingRect(contour)
-                # whiteboard = trim[y: y+h, x: x+w]
-                # cv2.drawContours(trim, [contour], -1, (0, 255, 0), 2)
-                # whiteboard = cv2.resize(whiteboard, (1280, 720))
 
-                pts1 = np.float32([[x, y], [x+w, y], [x, y+h], [x+w, y+h]])
-                pts2 = np.float32([[0, 0], [1280, 0], [0, 720], [1280, 720]])
-                M = cv2.getPerspectiveTransform(pts1, pts2)
-                dst = cv2.warpPerspective(mask, M, (1280, 720))
+                if 1.2 < w/h < 2 and 1000 > w > 900 and 650 > h > 550:
 
-                # cv2.imshow("dst", dst)
-                # cv2.waitKey(2)
+                    # Extract vertices of the polygon (corners)
+                    corners = approx.reshape(-1, 2)
+                    centroid = np.mean(corners, axis=0)
 
-                self.words_trim(dst)
-                break
+                    # Calculate the angles of each corner with respect to the centroid
+                    angles = np.arctan2(corners[:, 1] - centroid[1], corners[:, 0] - centroid[0])
+
+                    # Sort the corners based on the angles in counterclockwise order
+                    sorted_indices = np.argsort(angles)
+                    sorted_corners = corners[sorted_indices]
+
+                    # Access the sorted corners as needed
+                    x1, y1 = sorted_corners[0]
+                    x2, y2 = sorted_corners[1]
+                    x3, y3 = sorted_corners[2]
+                    x4, y4 = sorted_corners[3]
+
+                    cv2.circle(trim, (x1, y1), 5, (0, 0, 255), -1)
+                    cv2.circle(trim, (x2, y2), 5, (0, 255, 0), -1)
+                    cv2.circle(trim, (x3, y3), 5, (255, 0, 0), -1)
+                    cv2.circle(trim, (x4, y4), 5, (255, 0, 255), -1)
+                    # cv2.imshow("trim", trim)
+                    # cv2.waitKey(2)
+
+                    pts1 = np.float32([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
+                    pts2 = np.float32([[0, 0], [1280, 0], [1280, 720], [0, 720]])
+                    M = cv2.getPerspectiveTransform(pts1, pts2)
+                    dst = cv2.warpPerspective(mask, M, (1280, 720))
+
+                    # cv2.imshow("dst", dst)
+                    # cv2.waitKey(2)
+
+                    self.words_trim(dst)
+                    break
 
                 # self.DO_SIFT(whiteboard)   
         
@@ -189,8 +211,8 @@ class clue_Detector:
         self.lastCall_time = rospy.get_time()
 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))       
-        cropped = cv2.erode(crop, kernel, 4)
-        # cropped = cv2.dilate(crop, kernel, iterations=1)
+        cropped = cv2.erode(crop, kernel, 5)
+        cropped = cv2.bilateralFilter(cropped, 11, 25, 25)
         top = cropped[0:360, 0:1280]
         bottom = cropped[360:720, 0:1280]
         
@@ -212,8 +234,8 @@ class clue_Detector:
                 iteration += 1
         
         # print("length", len(self.half))
-        #cv2.imshow("top", top)
-        # cv2.waitKey(2)
+        cv2.imshow("top", top)
+        cv2.waitKey(2)
         self.oneBoard_chars.append(self.half)
         self.half = []
         
@@ -237,8 +259,9 @@ class clue_Detector:
         self.all_data.append(self.oneBoard_chars)
         self.oneBoard_chars = [] 
 
-        #cv2.imshow("bottom", bottom)
+        cv2.imshow("bottom", bottom)
         cv2.waitKey(2)
+
 
     def character_trim(self, string_img, iteration):
         h, w = string_img.shape
@@ -247,18 +270,19 @@ class clue_Detector:
 
         if w < space and w != 0:
             space = w
-        else:
+        if w > space and w != 0:
             space = w // 2
         
         num = w // space
+        print("w:", w)
+        print("num: ", num)
         
         for character in range(num):
             character_img = string_img[0:h, space * character : space * (character+1)]
             file_name = str(self.board_count) + str(iteration) + str(character) + '.jpg'
             full_path = folder_path + file_name
         
-            character_blur = cv2.bilateralFilter(character_img, 9, 75, 75)
-            character_resize = cv2.resize(character_blur, (120, 100))
+            character_resize = cv2.resize(character_img, (120, 100))
             
             # cv2.imwrite(full_path, character_resize)
             self.half.append(character_resize)
@@ -269,13 +293,17 @@ class clue_Detector:
         timePassed = rospy.get_time() - self.lastCall_time
         time_threshold = 0.75
         
-        if self.board_count == 3 or self.board_count == 8:
-            time_threshold = 0.05
+        if self.board_count == 3 or self.board_count == 8 or self.board_count == 9:
+            time_threshold = 0.045
         else:
             time_threshold = 0.75
         
         if timePassed > time_threshold and self.all_data: # if all_data is not empty
-            good_chars = self.all_data[-1]
+            if self.board_count == 3 or self.board_count == 5:
+                good_chars = self.all_data[0]
+            else:
+                good_chars = self.all_data[-1]
+            
             self.call_CNN(good_chars)
     
             self.board_count +=1
