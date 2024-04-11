@@ -7,6 +7,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from std_msgs.msg import String
 from cluePredictor import cluePrediction
+import math
 
 class clue_Detector:
 
@@ -213,8 +214,8 @@ class clue_Detector:
         self.lastCall_time = rospy.get_time()
 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))       
-        cropped = cv2.erode(crop, kernel, 6)
-        cropped = cv2.bilateralFilter(cropped, 11, 25, 25)
+        cropped = cv2.erode(crop, kernel, 10)
+        # cropped = cv2.bilateralFilter(cropped, 11, 25, 25)
         top = cropped[0:360, 0:1280]
         bottom = cropped[360:720, 0:1280]
         
@@ -228,8 +229,8 @@ class clue_Detector:
         
         for contour in sorted_contours_top:
             x, y, w, h = cv2.boundingRect(contour)
-            # if w < 650 and w > 55 and h < 650 and h > 55:
-            if w < 650 and h < 650 and 1.3 < w/h < 2:
+            if w < 650 and w > 55 and h < 650 and h > 55:
+            
                 cv2.rectangle(top, (x-1, y-1), (x + w +1, y + h + 1), (255, 0, 255), 1)
 
                 string_img = top[y-1:y+h+1, x-1:x+w+1]
@@ -246,8 +247,8 @@ class clue_Detector:
 
         for contour in sorted_contours_bottom:
             x, y, w, h = cv2.boundingRect(contour)
-            # if w < 650 and w > 55 and h < 650 and h > 55:
-            if w < 650 and h < 650 and 1.3 < w/h < 2:
+            if w < 650 and w > 55 and h < 650 and h > 55:
+           
                 # Add 360 to y-coordinate
                 # y += 360
                 cv2.rectangle(bottom, (x, y), (x + w, y + h), (255, 0, 255), 1)
@@ -269,13 +270,15 @@ class clue_Detector:
 
     def character_trim(self, string_img, iteration):
         h, w = string_img.shape
-        space = 120
+        space = 110
         folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/newCharacters/"
 
         if w < space and w != 0:
             space = w
         
-        num = w // space
+        num = math.ceil(w/space)
+        space = w//num
+        print("w:", w)
         
         for character in range(num):
             character_img = string_img[0:h, space * character : space * (character+1)]
@@ -294,7 +297,7 @@ class clue_Detector:
         time_threshold = 0.75
         
         if self.board_count == 3 or self.board_count == 8 or self.board_count == 9:
-            time_threshold = 0.045
+            time_threshold = 0.05
         else:
             time_threshold = 0.75
         

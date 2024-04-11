@@ -1,2 +1,14 @@
-Predicted Character: OO
-Predicted Character: LDO
+Predicted Character: SIZE
+Predicted Character: UNCOUNTABLE
+Predicted Character: VICTIM
+Predicted Character: CITIZENS
+Predicted Character: CRIME
+Predicted Character: SWEAR
+Predicted Character: TIME
+Predicted Character: EONSAGO
+Predicted Character: TIME
+Predicted Character: EONSAGO
+Predicted Character: PLACE
+Predicted Character: MALL
+Predicted Character: MOTIVE
+Predicted Character: HASTE
