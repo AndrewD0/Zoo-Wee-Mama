@@ -192,6 +192,7 @@ class robotController:
                     self.stateTracker.setState('TUNNEL')
                     if self.respawned == False:
                         self.spawnPosition([-4.2, -2.3, 0.2, 1])
+                        self.prevTimeCounter = 0
                         self.respawned = True
 
                 
@@ -201,14 +202,25 @@ class robotController:
                     self.stateTracker.setState('TUNNEL')
 
         elif(self.stateTracker.getState() == 'TUNNEL'):
-            self.velocityController.velocityPublish(0,0)
 
-
-            mountainHighlight = cv2.inRange(hsvFrame, np.array([25,30,155]), np.array([60,90,255]))
-            self.velocityController.mountainClimber(mountainHighlight, frame)
+            self.velocityController.setLinearX(0.2)
+            self.velocityController.setProportionalConstant(0.02)
+            
+            if(self.prevTimeCounter == 0):
+                self.velocityController.velocityPublish(0,0)
+                self.previousTime = rospy.get_time()
+                self.previousTimeCounter = 1
+            
+            if(rospy.get_time() < self.previousTime + 4):
+                self.velocityController.velocityPublish(0.5,0)
+                print("TRUE")
+                print("Current time: %d Prev Time: %d" % (rospy.get_time(), self.previousTime))
+            else:
+                mountainHighlight = cv2.inRange(hsvFrame, np.array([25,30,155]), np.array([60,90,255]))
+                self.velocityController.mountainClimber(mountainHighlight, frame)
         
-            if(self.stateTracker.getCluesCounter() == 9):
-                self.velocityController.velocityPublish(0, 0)
+                if(self.stateTracker.getCluesCounter() == 9):
+                    self.velocityController.velocityPublish(0, 0)
 
         self.previousFrame = frame
 
