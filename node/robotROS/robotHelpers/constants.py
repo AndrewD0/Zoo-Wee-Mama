@@ -4,8 +4,8 @@ import numpy as np
 # Thresholds
 
 # Detecting white lines
-LOWER_WHITE = np.array([235,235,235])
-UPPER_WHITE = np.array([255,255,255])
+LOWER_WHITE = 230
+UPPER_WHITE = 255
 
 # Detecting the road in HSV
 LOWER_ROAD = np.array([0, 0, 0])
@@ -22,5 +22,8 @@ UPPER_RED = np.array([20,20,255])
 #Detecting pink
 LOWER_PINK = np.array([200, 0, 200])
 UPPER_PINK = np.array([255, 30, 255])
+
+LOWER_TUNNEL = np.array([6, 50, 50])
+UPPER_TUNNEL = np.array([10, 200, 255])
 
 IMG_STYLE = 'bgr8'

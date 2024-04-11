@@ -1,12 +1,2 @@
-Predicted Character: SIZE
-Predicted Character: 5S5S5S
-Predicted Character: VICTIM
-Predicted Character: 3B3B3B3B
-Predicted Character: CRIME
-Predicted Character: OTMOOO4ROO1O
-Predicted Character: CRIME
-Predicted Character: O4XM4OO
-Predicted Character: CRIME
-Predicted Character: OOQOQO
-Predicted Character: CRIME
-Predicted Character: OOOQOOOQOOO
+Predicted Character: 
+Predicted Character: 

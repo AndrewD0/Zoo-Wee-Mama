@@ -28,6 +28,8 @@ class robotController:
 
         # State tracking object
         self.stateTracker = stateTracker()
+
+        self.msg = ModelState()
         
         self.bridge = CvBridge() # CvBridge initialization
         self.previousFrame = np.zeros((720,1280,3), dtype = np.uint8) # Creating a variable that stores the previous frame
@@ -70,37 +72,34 @@ class robotController:
         soilHighlight = cv2.inRange(hsvFrame, constants.LOWER_SOIL, constants.UPPER_SOIL)
         soilHighlight = cv2.medianBlur(soilHighlight, 7)
         
-        ret, whiteHighlight = cv2.threshold(grayFrame, 230,255, cv2.THRESH_BINARY)
+        ret, whiteHighlight = cv2.threshold(grayFrame, constants.LOWER_WHITE, constants.UPPER_WHITE, cv2.THRESH_BINARY)
         whiteHighlight = cv2.GaussianBlur(whiteHighlight, (9,9),0)
 
         pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
-        
-        # cv2.imshow("redhighlight", redHighlight)
-        # cv2.waitKey(2)
-        # cv2.imshow("pinkhighlight", pinkHighlight)
-        # cv2.waitKey(2)
+
+        tunnelHighlight = cv2.inRange(hsvFrame, constants.LOWER_TUNNEL, constants.UPPER_TUNNEL)
+        cv2.imshow("tunnel", tunnelHighlight)
+        cv2.waitKey(2)
 
         self.stateTracker.findState(pinkHighlight, redHighlight)
-        # cv2.imshow("pink", pinkHighlight)
-        # cv2.waitKey(2)
 
         print(self.stateTracker.getState())
 
         if(self.stateTracker.getState() == 'ROAD'):
-            self.velocityController.lineFollower(whiteHighlight, frame)
+            self.velocityController.lineFollower(whiteHighlight, frame, 'ROAD')
 
             if(self.stateTracker.getCluesCounter() == 2):
-
                 self.velocityController.setLinearX(0.3)
-                self.velocityController.setBias(20)
+                # self.velocityController.setBias(20)
 
-            elif(self.stateTracker.getCluesCounter() == 3):
-                self.velocityController.velocityPublish(0, 0.3)
+            # elif(self.stateTracker.getCluesCounter() == 3):
+                # self.velocityController.velocityPublish(-0.1, 0)
             
-            elif(self.stateTracker.getCluesCounter() == 4):
+            elif(self.stateTracker.getCluesCounter() == 3):
 
                 self.stateTracker.setState('ROUNDABOUT')
+
                 self.velocityController.velocityPublish(0,0)
                 self.stateTracker.startRoundabout(True)
                 self.prevTimeCounter = 0
@@ -108,17 +107,19 @@ class robotController:
 
         elif(self.stateTracker.getState() == 'PEDESTRIAN'):
             self.velocityController.velocityPublish(0,0)
+            
             # I don't like this implementation
             if(self.prevTimeCounter == 0):
                 self.previousTime = rospy.get_time()
                 self.prevTimeCounter = 1
+
             if(rospy.get_time() > self.previousTime+0.75):
                 if(robotFunctions.pedestrianCrossed(frame, self.previousFrame) == True):
                     self.stateTracker.setState('ROAD')
         
         elif(self.stateTracker.getState() == 'ROUNDABOUT'):
 
-            if(self.stateTracker.startedRoundabout == True):
+            if(self.stateTracker.checkRoundabout() == True):
                 if(self.prevTimeCounter == 0):
                 
                     self.velocityController.setAngularZ(0)
@@ -126,22 +127,29 @@ class robotController:
                     self.velocityController.setError(0)
 
                     self.velocityController.setLinearX(0.25)
-                    self.velocityController.setProportionalConstant(0.02)
+                    self.velocityController.setProportionalConstant(0.03)
 
                     self.previousTime = rospy.get_time()
                     self.prevTimeCounter = 1
 
+                # Timer
                 if(rospy.get_time() < self.previousTime + 1):
-                    self.velocityController.velocityPublish(0,-1.35)
-                elif(rospy.get_time() < self.previousTime + 2.75):
+                    self.velocityController.velocityPublish(0,-1.1)
+                elif(rospy.get_time() < self.previousTime + 2.5):
                         self.velocityController.velocityPublish(0.3, 0)
+
                 else:
-                    # self.velocityController.velocityPublish(0,0)
                     self.stateTracker.startRoundabout(False)
+
             else:
                 self.velocityController.roundaboutFollower(whiteHighlight, frame)
-                if(self.stateTracker.getCluesCounter() == 6):
+                if(self.stateTracker.getCluesCounter() == 4):
                     self.stateTracker.setState('ROAD')
+
+                    self.velocityController.setProportionalConstant(0.03)
+                    self.velocityController.setLinearX(0.45)
+
+                    self.prevTimeCounter = 0
     
         elif(self.stateTracker.getState() == 'GRASS'):
             # if self.GrassTransition == False:
@@ -150,27 +158,60 @@ class robotController:
             #     while(rospy.get_time() - previous_time < 0.5):
             #         self.velocityController.velocityPublish(0.45, 0)
             
-            self.velocityController.setLinearX(0.45)
+            self.velocityController.setLinearX(0.4)
+            self.velocityController.setProportionalConstant(0.045)
             
         
-            self.velocityController.lineFollower(soilHighlight, frame)
-            if(self.stateTracker.getCluesCounter() == 6): # change back to 4
-                self.velocityController.setBias(140)
-            if(self.stateTracker.getCluesCounter() == 7): # change back to 5
+            self.velocityController.lineFollower(soilHighlight, frame, 'GRASS')
+            if(self.stateTracker.getCluesCounter() == 5): # change back to 4
+                self.velocityController.setBias(120)
+            if(self.stateTracker.getCluesCounter() == 6): # change back to 5
                 self.velocityController.setBias(-60)
-            elif(self.stateTracker.getCluesCounter() == 8): # change back to 6
-                # self.stateTracker.setState('YODA')
-                if not self.respawned:
-                    self.spawnPosition([-4.05, -2.3, 0.2, 1])
-                    self.respawned = True
-                # self.velocityController.yodaFollower(soilHighlight)
-            # self.velocityController.velocityPublish(0, 0)
-            elif(self.stateTracker.getCluesCounter() == 9):
-                # self.stateTracker.setState('TUNNEL')
-                pass
+            elif(self.stateTracker.getCluesCounter() == 1): # change back to 6
+                self.stateTracker.setState('YODA')
+
+        elif(self.stateTracker.getState() == 'YODA'):
+            self.velocityController.velocityPublish(0, 0)
+            self.velocityController.yodaFollower(soilHighlight)
+
+
+            # if not self.respawned:
+            #     self.spawnPosition([-4.15, -2.3, 0.2, 1])
+            #     self.respawned = True
+
+
+            if(self.stateTracker.getCluesCounter() == 8):
+                self.stateTracker.setState('TUNNEL')
+        
+        elif(self.stateTracker.getState() == 'TUNNEL'):
+            self.velocityController.velocityPublish(0.3, 0)
+
 
 
         self.previousFrame = frame
+
+    # def Position(self):
+
+    #     # index = msg.name.index(msg.model_name)
+    #     pose = self.msg.pose
+    #     x_position = pose.position.x
+    #     y_position = pose.position.y
+    #     w_orientation = pose.orientation.w
+
+    #     print("x-position: ", x_position)
+    #     print("y-position: ", y_position)
+    #     print("w-position: ", w_orientation)
+
+    #     tolerance = 0.01
+
+    #     if abs(x_position - (-5.7)) > tolerance:
+    #         self.velocityController.velocityPublish(0.5, 0)
+
+    #     elif abs(w_orientation - 0.5) > tolerance:
+    #         self.velocityController.velocityPublish(0, 0.5)
+
+    #     elif abs(y_position - (-2.3)) > tolerance:
+    #         self.velocityController.velocityPublish(0.5, 0)
 
 
     def spawnPosition(self, position):

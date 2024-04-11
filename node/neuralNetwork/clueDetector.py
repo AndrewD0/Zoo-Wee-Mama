@@ -34,7 +34,7 @@ class clue_Detector:
         sky_blue_up = np.array([115, 125, 235])
         img_style = 'bgr8'
         
-        # img = cv2.imread("/home/fizzer/Downloads/sky1.png")
+        # img = cv2.imread("/home/fizzer/Downloads/brick.png")
         # hsv_image = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         # # Calculate the mean HSV values of the entire image
@@ -65,7 +65,7 @@ class clue_Detector:
 
         min_area = 25000 # <22000
         max_area = 25000
-        min_ratio = 1.2
+        min_ratio = 1.35
         max_ratio = 2
 
         sorted_contour = sorted(contours, key=cv2.contourArea, reverse=True)
@@ -189,7 +189,7 @@ class clue_Detector:
         self.lastCall_time = rospy.get_time()
 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))       
-        cropped = cv2.erode(crop, kernel, 2)
+        cropped = cv2.erode(crop, kernel, 4)
         # cropped = cv2.dilate(crop, kernel, iterations=1)
         top = cropped[0:360, 0:1280]
         bottom = cropped[360:720, 0:1280]
@@ -248,11 +248,9 @@ class clue_Detector:
         if w < space and w != 0:
             space = w
         else:
-            print("width: ", w)
-        num = w//space
-        if w / space > 1.5:
-            num += 1
-        print(num)
+            space = w // 2
+        
+        num = w // space
         
         for character in range(num):
             character_img = string_img[0:h, space * character : space * (character+1)]
@@ -270,12 +268,9 @@ class clue_Detector:
     def boardUpdate(self):
         timePassed = rospy.get_time() - self.lastCall_time
         time_threshold = 0.75
-        if self.board_count == 2:
-            time_threshold = 0.08
-        elif self.board_count == 3:
-            time_threshold = 0.5
-        elif self.board_count == 4:
-            time_threshold = 0.02
+        
+        if self.board_count == 3 or self.board_count == 8:
+            time_threshold = 0.05
         else:
             time_threshold = 0.75
         
