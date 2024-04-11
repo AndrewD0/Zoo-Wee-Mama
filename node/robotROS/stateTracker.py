@@ -9,7 +9,7 @@ class stateTracker:
     def __init__(self):
         self.msg = rospy.Subscriber('Output_topic', String, self.msg_callback, queue_size=10)
         self.robotDictionary = {0:'ROAD', 1:'PEDESTRIAN', 2:'ROUNDABOUT', 3:'GRASS', 4:'YODA', 5:'TUNNEL'}
-        self.robotState = self.robotDictionary[0]
+        self.robotState = self.robotDictionary[3]
 
         self.markersCounter = 0
         self.cluesCounter = 0
@@ -24,9 +24,16 @@ class stateTracker:
     def findState(self, pinkImage, redImage):
 
         # Check if we have reached the pink.
-        if np.any(pinkImage[-1,:]) > 0:
+        if np.any(pinkImage[-1,:]) > 0 and self.pinkReached == False:
             self.pinkReached = True
             self.setState('GRASS')
+
+        if self.pinkReached == True and np.any(pinkImage[-1,:]) == 0:
+            self.pinkReached = False
+
+        if np.any(pinkImage[-1,:]) > 0 and self.pinkReached == True:
+            self.pinkReached = True
+            self.setState('Tunnel')
         
         # Check if we have crossed the pink line.
         # if self.pinkReached == True:

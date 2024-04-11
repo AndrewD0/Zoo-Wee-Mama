@@ -14,7 +14,7 @@ class velocityController:
 
         # Velocities of the robot
         self.angularZ = 0
-        self.linearX = 0.45
+        self.linearX = 0.5
 
         self.averageCentroid = (0,0)
         self.proportionalConstant = 0.03
@@ -123,6 +123,10 @@ class velocityController:
         # cv2.waitKey(2)
 
         self.velocityPublish(self.linearX, self.angularZ)
+
+    def yodaFollower(self, image):
+        # self.
+        pass
 
     def soilFollower(self, mask, frame):
 

@@ -28,6 +28,8 @@ class robotController:
 
         # State tracking object
         self.stateTracker = stateTracker()
+
+        self.msg = ModelState()
         
         self.bridge = CvBridge() # CvBridge initialization
         self.previousFrame = np.zeros((720,1280,3), dtype = np.uint8) # Creating a variable that stores the previous frame
@@ -36,6 +38,7 @@ class robotController:
         self.started = False 
         self.startTime = 0
         self.GrassTransition = False
+        self.respawned = False
     
     def clockCallback(self, data):
         # Start timer
@@ -75,6 +78,10 @@ class robotController:
         pinkHighlight = cv2.inRange(frame, constants.LOWER_PINK, constants.UPPER_PINK)
         redHighlight = cv2.inRange(frame, constants.LOWER_RED, constants.UPPER_RED)
 
+        tunnelHighlight = cv2.inRange(hsvFrame, constants.LOWER_TUNNEL, constants.UPPER_TUNNEL)
+        cv2.imshow("tunnel", tunnelHighlight)
+        cv2.waitKey(2)
+
         self.stateTracker.findState(pinkHighlight, redHighlight)
 
         print(self.stateTracker.getState())
@@ -84,8 +91,13 @@ class robotController:
 
             if(self.stateTracker.getCluesCounter() == 2):
                 self.velocityController.setLinearX(0.3)
+                # self.velocityController.setBias(20)
 
+            # elif(self.stateTracker.getCluesCounter() == 3):
+                # self.velocityController.velocityPublish(-0.1, 0)
+            
             elif(self.stateTracker.getCluesCounter() == 3):
+
                 self.stateTracker.setState('ROUNDABOUT')
 
                 self.velocityController.velocityPublish(0,0)
@@ -115,7 +127,7 @@ class robotController:
                     self.velocityController.setError(0)
 
                     self.velocityController.setLinearX(0.25)
-                    self.velocityController.setProportionalConstant(0.02)
+                    self.velocityController.setProportionalConstant(0.03)
 
                     self.previousTime = rospy.get_time()
                     self.prevTimeCounter = 1
@@ -123,7 +135,6 @@ class robotController:
                 # Timer
                 if(rospy.get_time() < self.previousTime + 1):
                     self.velocityController.velocityPublish(0,-1.1)
-
                 elif(rospy.get_time() < self.previousTime + 2.5):
                         self.velocityController.velocityPublish(0.3, 0)
 
@@ -132,7 +143,6 @@ class robotController:
 
             else:
                 self.velocityController.roundaboutFollower(whiteHighlight, frame)
-
                 if(self.stateTracker.getCluesCounter() == 4):
                     self.stateTracker.setState('ROAD')
 
@@ -142,6 +152,11 @@ class robotController:
                     self.prevTimeCounter = 0
     
         elif(self.stateTracker.getState() == 'GRASS'):
+            # if self.GrassTransition == False:
+            #     previous_time = rospy.get_time()
+            #     self.GrassTransition = True
+            #     while(rospy.get_time() - previous_time < 0.5):
+            #         self.velocityController.velocityPublish(0.45, 0)
             
             if(self.prevTimeCounter == 0):
                 self.previousTime = rospy.get_time()
@@ -170,6 +185,29 @@ class robotController:
 
 
         self.previousFrame = frame
+
+    # def Position(self):
+
+    #     # index = msg.name.index(msg.model_name)
+    #     pose = self.msg.pose
+    #     x_position = pose.position.x
+    #     y_position = pose.position.y
+    #     w_orientation = pose.orientation.w
+
+    #     print("x-position: ", x_position)
+    #     print("y-position: ", y_position)
+    #     print("w-position: ", w_orientation)
+
+    #     tolerance = 0.01
+
+    #     if abs(x_position - (-5.7)) > tolerance:
+    #         self.velocityController.velocityPublish(0.5, 0)
+
+    #     elif abs(w_orientation - 0.5) > tolerance:
+    #         self.velocityController.velocityPublish(0, 0.5)
+
+    #     elif abs(y_position - (-2.3)) > tolerance:
+    #         self.velocityController.velocityPublish(0.5, 0)
 
 
     def spawnPosition(self, position):

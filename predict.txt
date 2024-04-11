@@ -1,10 +1,2 @@
-Predicted Character: SIZE
-Predicted Character: ATRIPLETOF
-Predicted Character: VICTIM
-Predicted Character: ZOMBIES
-Predicted Character: CRIME
-Predicted Character: SHOIVEO
-Predicted Character: TIME
-Predicted Character: MIDNIGHT
-Predicted Character: TIME
-Predicted Character: MIONIOHT
+Predicted Character: 
+Predicted Character: 

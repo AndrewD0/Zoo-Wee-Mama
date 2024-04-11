@@ -23,4 +23,7 @@ UPPER_RED = np.array([20,20,255])
 LOWER_PINK = np.array([200, 0, 200])
 UPPER_PINK = np.array([255, 30, 255])
 
+LOWER_TUNNEL = np.array([6, 50, 50])
+UPPER_TUNNEL = np.array([10, 200, 255])
+
 IMG_STYLE = 'bgr8'
