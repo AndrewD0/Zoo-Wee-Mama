@@ -29,7 +29,6 @@ class robotController:
         # State tracking object
         self.stateTracker = stateTracker()
 
-        self.msg = ModelState()
         
         self.bridge = CvBridge() # CvBridge initialization
         self.previousFrame = np.zeros((720,1280,3), dtype = np.uint8) # Creating a variable that stores the previous frame
@@ -70,7 +69,7 @@ class robotController:
         grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
 
         soilHighlight = cv2.inRange(hsvFrame, constants.LOWER_SOIL, constants.UPPER_SOIL)
-        soilHighlight = cv2.medianBlur(soilHighlight, 7)
+        #soilHighlight = cv2.GaussianBlur(soilHighlight, (3,3), 0)
         
         ret, whiteHighlight = cv2.threshold(grayFrame, constants.LOWER_WHITE, constants.UPPER_WHITE, cv2.THRESH_BINARY)
         whiteHighlight = cv2.GaussianBlur(whiteHighlight, (9,9),0)
@@ -80,6 +79,7 @@ class robotController:
 
         tunnelHighlight = cv2.inRange(hsvFrame, constants.LOWER_TUNNEL, constants.UPPER_TUNNEL)
         cv2.imshow("tunnel", tunnelHighlight)
+        cv2.imshow("soil", soilHighlight)
         cv2.waitKey(2)
 
         self.stateTracker.findState(pinkHighlight, redHighlight)
@@ -126,7 +126,7 @@ class robotController:
                     self.velocityController.setBias(0)
                     self.velocityController.setError(0)
 
-                    self.velocityController.setLinearX(0.25)
+                    self.velocityController.setLinearX(0.15)
                     self.velocityController.setProportionalConstant(0.03)
 
                     self.previousTime = rospy.get_time()
@@ -157,36 +157,36 @@ class robotController:
             #     self.GrassTransition = True
             #     while(rospy.get_time() - previous_time < 0.5):
             #         self.velocityController.velocityPublish(0.45, 0)
+
+            self.velocityController.setProportionalConstant(0.02)
             
-            self.velocityController.setLinearX(0.4)
-            self.velocityController.setProportionalConstant(0.045)
+            if(self.prevTimeCounter == 0):
+                self.previousTime = rospy.get_time()
+                self.prevTimeCounter = 1
+
+            if(rospy.get_time() < self.previousTime + 0.60):
+                self.velocityController.velocityPublish(0.25,0)
+                self.velocityController.setAngularZ(0)
+                self.velocityController.setError(0)
+            else:
+
+                self.velocityController.soilFollower(soilHighlight, frame)
+
+                if(self.stateTracker.getCluesCounter() == 5): # change back to 4
+                    #self.velocityController.setBias(140)
+                    pass
             
-        
-            self.velocityController.lineFollower(soilHighlight, frame, 'GRASS')
-            if(self.stateTracker.getCluesCounter() == 5): # change back to 4
-                self.velocityController.setBias(120)
-            if(self.stateTracker.getCluesCounter() == 6): # change back to 5
-                self.velocityController.setBias(-60)
-            elif(self.stateTracker.getCluesCounter() == 1): # change back to 6
-                self.stateTracker.setState('YODA')
+                elif(self.stateTracker.getCluesCounter() == 6): # change back to 5
+                    self.velocityController.setBias(-60)
 
-        elif(self.stateTracker.getState() == 'YODA'):
-            self.velocityController.velocityPublish(0, 0)
-            self.velocityController.yodaFollower(soilHighlight)
+                elif(self.stateTracker.getCluesCounter() == 7): # change back to 6
+                    self.stateTracker.setState('YODA')
+                    self.spawnPosition([-4.2, -2.3, 0.2, 1])
 
-
-            # if not self.respawned:
-            #     self.spawnPosition([-4.15, -2.3, 0.2, 1])
-            #     self.respawned = True
-
-
-            if(self.stateTracker.getCluesCounter() == 8):
-                self.stateTracker.setState('TUNNEL')
-        
+                elif(self.stateTracker.getCluesCounter() == 8):
+                    self.stateTracker.setState('TUNNEL')
         elif(self.stateTracker.getState() == 'TUNNEL'):
-            self.velocityController.velocityPublish(0.3, 0)
-
-
+            pass
 
         self.previousFrame = frame
 

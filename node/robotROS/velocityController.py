@@ -124,10 +124,20 @@ class velocityController:
 
         self.velocityPublish(self.linearX, self.angularZ)
 
-    def yodaFollower(self, image):
-        # self.
-        pass
+    def yodaFollower(self, previous_time):
 
+        if rospy.get_time() - previous_time < 0.5:
+            self.setAngularZ(0.3)
+            self.setLinearX(0)
+        elif rospy.get_time() - previous_time < 5:
+            self.setAngularZ(0)
+            self.setLinearX(0.5)
+        elif rospy.get_time() - previous_time < 5.5:
+            self.setAngularZ(0.3)
+            self.setLinearX(0)
+        
+        
+        self.velocityPublish(self.linearX, self.angularZ)
     def setLinearX(self, linearX):
         self.linearX = linearX
     
