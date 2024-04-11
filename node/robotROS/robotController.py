@@ -80,6 +80,7 @@ class robotController:
 
         tunnelHighlight = cv2.inRange(hsvFrame, constants.LOWER_TUNNEL, constants.UPPER_TUNNEL)
         cv2.imshow("tunnel", tunnelHighlight)
+        cv2.imshow("soil", soilHighlight)
         cv2.waitKey(2)
 
         self.stateTracker.findState(pinkHighlight, redHighlight)
@@ -185,7 +186,8 @@ class robotController:
 
                 elif(self.stateTracker.getCluesCounter() == 8):
                     self.stateTracker.setState('TUNNEL')
-
+        elif(self.stateTracker.getState() == 'TUNNEL'):
+            pass
 
         self.previousFrame = frame
 
