@@ -70,7 +70,7 @@ class robotController:
 
         soilHighlight = cv2.inRange(hsvFrame, constants.LOWER_SOIL, constants.UPPER_SOIL)
         #soilHighlight = cv2.GaussianBlur(soilHighlight, (3,3), 0)
-        
+     
         ret, whiteHighlight = cv2.threshold(grayFrame, constants.LOWER_WHITE, constants.UPPER_WHITE, cv2.THRESH_BINARY)
         whiteHighlight = cv2.GaussianBlur(whiteHighlight, (9,9),0)
 
