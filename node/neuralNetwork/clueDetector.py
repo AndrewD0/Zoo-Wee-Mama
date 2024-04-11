@@ -211,8 +211,8 @@ class clue_Detector:
         self.lastCall_time = rospy.get_time()
 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))       
-        cropped = cv2.erode(crop, kernel, 5)
-        cropped = cv2.bilateralFilter(cropped, 11, 25, 25)
+        cropped = cv2.erode(crop, kernel, 10)
+        # cropped = cv2.bilateralFilter(cropped, 11, 25, 25)
         top = cropped[0:360, 0:1280]
         bottom = cropped[360:720, 0:1280]
         
