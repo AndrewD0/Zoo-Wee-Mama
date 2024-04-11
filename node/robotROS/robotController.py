@@ -87,7 +87,7 @@ class robotController:
         filtered = cv2.bitwise_and(blue_region, blue_region, mask=no_sky)
         boardHighlight = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)
         
-        cv2.imshow("tunnel", boardHighlight)
+        #cv2.imshow("tunnel", boardHighlight)
         # cv2.imshow("soil", soilHighlight)
         cv2.waitKey(2)
 
@@ -205,8 +205,8 @@ class robotController:
 
         elif(self.stateTracker.getState() == 'TUNNEL'):
 
-            self.velocityController.setLinearX(0.2)
-            self.velocityController.setProportionalConstant(0.02)
+            self.velocityController.setLinearX(0.15)
+            self.velocityController.setProportionalConstant(0.005)
     
             # board_contours, _ = cv2.findContours(boardHighlight, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
@@ -214,7 +214,7 @@ class robotController:
             if(self.prevTimeCounter == 0):
                 self.velocityController.velocityPublish(0,0)
                 self.previousTime = rospy.get_time()
-                self.previousTimeCounter = 1
+                self.prevTimeCounter = 1
             
             if (rospy.get_time() < self.previousTime + 4):
                 self.velocityController.velocityPublish(0.5,0)

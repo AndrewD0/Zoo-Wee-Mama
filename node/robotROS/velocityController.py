@@ -241,7 +241,7 @@ class velocityController:
         height,width = frame.shape[:2]
         centerX = width//2
         centerY = height//2
-        threshold = 300
+        threshold = 400
 
         # We can make this a function!
 
@@ -260,7 +260,7 @@ class velocityController:
             centroidX1 = int(moment["m10"]/moment["m00"])
             centroidY1 = int(moment["m01"]/moment["m00"])
             self.averageCentroid=(centroidX1,centroidY1)
-            self.error = (centerX - self.averageCentroid[0])-threshold
+            self.error = (centerX - self.averageCentroid[0])+threshold
 
             cv2.drawContours(frame, finalContours, 0, (0,255,0), 3)
         else:
@@ -268,7 +268,7 @@ class velocityController:
             centroidX2 = 0
 
         
-        self.angularZ = self.proportionalConstant*self.error
+        self.angularZ = float(self.proportionalConstant*self.error)
 
         print("AngularZ: %d Error: %d" % (self.angularZ, self.error))
 

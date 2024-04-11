@@ -190,15 +190,15 @@ def findMountainContours(mask):
     for contour in contours:
         area = cv2.contourArea(contour)
 
-        if area >= 3000:
+        if area >= 1000:
             filteredContours.append(contour)
         
     finalContours = []
 
     for contour in filteredContours:
-        x,_,_,_ = cv2.boundingRect(contour)
-        distance = x
-        if (distance < 600):
+        x,_,w,_ = cv2.boundingRect(contour)
+        distance = width - (x+w)
+        if (distance < 400):
             finalContours.append(contour)
         
     finalContours = sorted(finalContours, key=cv2.contourArea, reverse=True)
