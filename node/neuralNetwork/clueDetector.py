@@ -65,7 +65,7 @@ class clue_Detector:
 
         min_area = 25000 # <22000
         max_area = 25000
-        min_ratio = 1.3
+        min_ratio = 1.2
         max_ratio = 2
 
         sorted_contour = sorted(contours, key=cv2.contourArea, reverse=True)
@@ -245,21 +245,14 @@ class clue_Detector:
         space = 120
         folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/newCharacters/"
 
-        # if w < space and w != 0:
-        #     space = w
-        # else:
-        #     print("width: ", w)
-        # num = w//space
-        # if w // space == 0:
-        #     num += 1
-        # print(num)
-
-        num = 1
-        if space < w < 270:
-            num = 2
-        elif 270 < w < 400:
-            num = 3
-        space = w // num
+        if w < space and w != 0:
+            space = w
+        else:
+            print("width: ", w)
+        num = w//space
+        if w / space > 1.5:
+            num += 1
+        print(num)
         
         for character in range(num):
             character_img = string_img[0:h, space * character : space * (character+1)]
@@ -269,7 +262,7 @@ class clue_Detector:
             character_blur = cv2.bilateralFilter(character_img, 9, 75, 75)
             character_resize = cv2.resize(character_blur, (120, 100))
             
-            cv2.imwrite(full_path, character_resize)
+            # cv2.imwrite(full_path, character_resize)
             self.half.append(character_resize)
 
 
@@ -277,8 +270,12 @@ class clue_Detector:
     def boardUpdate(self):
         timePassed = rospy.get_time() - self.lastCall_time
         time_threshold = 0.75
-        if self.board_count == 3:
-            time_threshold = 0.05
+        if self.board_count == 2:
+            time_threshold = 0.08
+        elif self.board_count == 3:
+            time_threshold = 0.5
+        elif self.board_count == 4:
+            time_threshold = 0.02
         else:
             time_threshold = 0.75
         

@@ -36,6 +36,7 @@ class robotController:
         self.started = False 
         self.startTime = 0
         self.GrassTransition = False
+        self.respawned = False
     
     def clockCallback(self, data):
         # Start timer
@@ -92,9 +93,12 @@ class robotController:
             if(self.stateTracker.getCluesCounter() == 2):
 
                 self.velocityController.setLinearX(0.3)
-                # self.velocityController.setBias(30)
+                self.velocityController.setBias(20)
 
             elif(self.stateTracker.getCluesCounter() == 3):
+                self.velocityController.velocityPublish(0, 0.3)
+            
+            elif(self.stateTracker.getCluesCounter() == 4):
 
                 self.stateTracker.setState('ROUNDABOUT')
                 self.velocityController.velocityPublish(0,0)
@@ -128,15 +132,15 @@ class robotController:
                     self.prevTimeCounter = 1
 
                 if(rospy.get_time() < self.previousTime + 1):
-                    self.velocityController.velocityPublish(0,-1.1)
-                elif(rospy.get_time() < self.previousTime + 2.5):
+                    self.velocityController.velocityPublish(0,-1.35)
+                elif(rospy.get_time() < self.previousTime + 2.75):
                         self.velocityController.velocityPublish(0.3, 0)
                 else:
                     # self.velocityController.velocityPublish(0,0)
                     self.stateTracker.startRoundabout(False)
             else:
                 self.velocityController.roundaboutFollower(whiteHighlight, frame)
-                if(self.stateTracker.getCluesCounter() == 4):
+                if(self.stateTracker.getCluesCounter() == 6):
                     self.stateTracker.setState('ROAD')
     
         elif(self.stateTracker.getState() == 'GRASS'):
@@ -150,17 +154,20 @@ class robotController:
             
         
             self.velocityController.lineFollower(soilHighlight, frame)
-            if(self.stateTracker.getCluesCounter() == 5): # change back to 4
+            if(self.stateTracker.getCluesCounter() == 6): # change back to 4
                 self.velocityController.setBias(140)
-            if(self.stateTracker.getCluesCounter() == 6): # change back to 5
+            if(self.stateTracker.getCluesCounter() == 7): # change back to 5
                 self.velocityController.setBias(-60)
-            elif(self.stateTracker.getCluesCounter() == 7): # change back to 6
-                self.stateTracker.setState('YODA')
-                self.spawnPosition([-4.2, -2.3, 0.2, 1])
+            elif(self.stateTracker.getCluesCounter() == 8): # change back to 6
+                # self.stateTracker.setState('YODA')
+                if not self.respawned:
+                    self.spawnPosition([-4.05, -2.3, 0.2, 1])
+                    self.respawned = True
                 # self.velocityController.yodaFollower(soilHighlight)
             # self.velocityController.velocityPublish(0, 0)
-            elif(self.stateTracker.getCluesCounter() == 8):
-                self.stateTracker.setState('TUNNEL')
+            elif(self.stateTracker.getCluesCounter() == 9):
+                # self.stateTracker.setState('TUNNEL')
+                pass
 
 
         self.previousFrame = frame
