@@ -124,32 +124,13 @@ class velocityController:
 
         self.velocityPublish(self.linearX, self.angularZ)
 
-    def yodaFollower(self, tunnelHighlight, boardHighlight, pinkHighlight, frame):
+    def yodaFollower(self, tunnelHighlight, frame):
         height, width = tunnelHighlight.shape[:2]
         centerX = width // 2
         centerY = height // 2
 
         tunnel_contours, _ = cv2.findContours(tunnelHighlight, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        board_contours, _ = cv2.findContours(boardHighlight, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        pink_contours, _ = cv2.findContours(pinkHighlight, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        if len(pink_contours) > 0:
-            sorted_pink = sorted(pink_contours, key=cv2.contourArea, reverse=True)
-            moment_pink = cv2.moments(sorted_pink[0])
-            pink_X = int(moment_pink["m10"]/moment_pink["m00"])
-            pink_Y = int(moment_pink["m01"]/moment_pink["m00"])
-
-            self.averageCentroid = (pink_X, pink_Y)
-
-        elif len(board_contours) > 0:
-            sorted_board = sorted(board_contours, key=cv2.contourArea, reverse=True)
-            moment_board = cv2.moments(sorted_board[0])
-            board_X = int(moment_board["m10"]/moment_board["m00"])
-            board_Y = int(moment_board["m01"]/moment_board["m00"])
-
-            self.averageCentroid = (board_X, board_Y)
-
-        elif len(tunnel_contours) > 0:
+        if len(tunnel_contours) > 0:
             sorted_tunnel = sorted(tunnel_contours, key=cv2.contourArea, reverse=True)
             moment_tunnel = cv2.moments(sorted_tunnel[0])
             tunnel_X = int(moment_tunnel["m10"]/moment_tunnel["m00"])

@@ -219,7 +219,7 @@ class clue_Detector:
         self.lastCall_time = rospy.get_time()
 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))       
-        cropped = cv2.erode(crop, kernel, 12)
+        cropped = cv2.erode(crop, kernel, 9)
         # cropped = cv2.bilateralFilter(cropped, 11, 25, 25)
         top = cropped[0:360, 0:1280]
         bottom = cropped[360:720, 0:1280]
@@ -276,14 +276,19 @@ class clue_Detector:
     def character_trim(self, string_img, iteration):
         h, w = string_img.shape
         space = 110
+        num = 1
         folder_path = "/home/fizzer/ros_ws/src/Zoo-Wee-Mama/newCharacters/"
 
         if w < space and w != 0:
             space = w
+
+        elif w > space:
+            space = w //2
+            num = 2
         
-        num = math.ceil(w/space)
-        space = w//num
-        print("w:", w)
+        # num = math.ceil(w/space)
+        # space = w//num
+        # print("w:", w)
         
         for character in range(num):
             character_img = string_img[0:h, space * character : space * (character+1)]

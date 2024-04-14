@@ -190,12 +190,14 @@ class robotController:
                     
 
                 elif(self.stateTracker.getCluesCounter() == 7): # change back to 6
-                    
-                    self.stateTracker.setState('TUNNEL')
-                    if self.respawned == False:
-                        self.spawnPosition([-4.2, -2.3, 0.2, 1])
-                        self.prevTimeCounter = 0
-                        self.respawned = True
+
+                    self.velocityController.yodaFollower(tunnelHighlight, frame)
+                    if rospy.get_time() - self.previousTime > 38.5:
+                        self.stateTracker.setState('TUNNEL')
+                        if self.respawned == False:
+                            self.spawnPosition([-4.2, -2.3, 0.2, 1])
+                            self.prevTimeCounter = 0
+                            self.respawned = True
 
                 
         elif(self.stateTracker.getState() == 'YODA'):
@@ -207,8 +209,6 @@ class robotController:
 
             self.velocityController.setLinearX(0.15)
             self.velocityController.setProportionalConstant(0.005)
-    
-            # board_contours, _ = cv2.findContours(boardHighlight, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
             
             if(self.prevTimeCounter == 0):
@@ -220,31 +220,6 @@ class robotController:
                 self.velocityController.velocityPublish(0.5,0)
                 print("TRUE")
                 print("Current time: %d Prev Time: %d" % (rospy.get_time(), self.previousTime))
-            
-            # elif len(board_contours) > 0 == True and (rospy.get_time() -self.previousTime) > 4:
-            #     print(board_contours)
-            #     height, width = frame.shape[:2]
-            #     centerX = width // 2
-            #     centerY = height // 2
-
-            #     sorted_board = sorted(board_contours, key=cv2.contourArea, reverse=True)
-            #     moment_board = cv2.moments(sorted_board[0])
-            #     board_X = int(moment_board["m10"]/moment_board["m00"])
-            #     board_Y = int(moment_board["m01"]/moment_board["m00"])
-
-            #     self.velocityController.averageCentroid = (board_X, board_Y)
-
-            #     self.velocityController.setError(centerX - self.velocityController.averageCentroid[0])
-
-            #     cv2.circle(frame, (centerX,centerY), 3, (0,255,0),3)
-            #     cv2.circle(frame, self.velocityController.averageCentroid, 3, (255,0,0), 3)
-
-            #     cv2.imshow("LAST!!!", frame)
-            #     cv2.waitKey(2)
-
-            #     self.velocityController.setAngularZ(self.velocityController.getProportionalConstant() * self.velocityController.getError())
-
-            #     self.velocityController.velocityPublish(0.3, self.velocityController.getAngularZ())
 
 
             else:
