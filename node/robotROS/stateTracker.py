@@ -28,8 +28,8 @@ class stateTracker:
             self.pinkReached = True
             self.setState('GRASS')
 
-        if self.pinkReached == True and np.any(pinkImage[-1,:]) == 0:
-            self.pinkReached = False
+        # if self.pinkReached == True and np.any(pinkImage[-1,:]) == 0:
+        #     self.pinkReached = False
 
         # if np.any(pinkImage[-1,:]) > 0 and self.pinkReached == True:
         #     self.pinkReached = False

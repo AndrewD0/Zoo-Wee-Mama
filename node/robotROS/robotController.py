@@ -208,7 +208,7 @@ class robotController:
         elif(self.stateTracker.getState() == 'TUNNEL'):
 
             self.velocityController.setLinearX(0.15)
-            self.velocityController.setProportionalConstant(0.005)
+            self.velocityController.setProportionalConstant(0.009)
         
             
             if(self.prevTimeCounter == 0):
