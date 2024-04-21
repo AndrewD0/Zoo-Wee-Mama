@@ -1,4 +1,0 @@
-Predicted Character: SIZE
-Predicted Character: APAIR
-Predicted Character: VICTIM
-Predicted Character: ALIENS

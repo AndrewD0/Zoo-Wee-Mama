@@ -48,7 +48,7 @@ class cluePrediction:
     def msg(self, clue_list):
         ID = -2
         value = "WRONG!!!"
-        clue_dict = {'SIZE': '1', 'VICTIM': '2','CRIME': '3', 'TIME': '4', 'PLACE': '5', 'MOTIVE': '6', 'WEAPON': '7', 'BANDIT': '8', 'BANOIT': '9'}
+        clue_dict = {'SIZE': '1', 'VICTIM': '2','CRIME': '3', 'TIME': '4', 'PLACE': '5', 'MOTIVE': '6', 'WEAPON': '7', 'BANOIT': '8'}
         pred_dict = {clue_list[0]:clue_list[1]}
 
         if bool (pred_dict):
@@ -57,10 +57,6 @@ class cluePrediction:
                 ID = clue_dict[key]
                 value = pred_dict[key]
             
-            if key == 'BANOIT':
-                ID = clue_dict['BANDIT']
-                value = pred_dict[key]
-
             msg = f'ZoWeMama,lisndrew,{ID},{value}'
 
             if msg != self.data:

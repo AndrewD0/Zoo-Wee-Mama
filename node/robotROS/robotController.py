@@ -191,13 +191,11 @@ class robotController:
 
                 elif(self.stateTracker.getCluesCounter() == 7): # change back to 6
 
-                    self.velocityController.yodaFollower(tunnelHighlight, frame)
-                    if rospy.get_time() - self.previousTime > 38.5:
-                        self.stateTracker.setState('TUNNEL')
-                        if self.respawned == False:
-                            self.spawnPosition([-4.2, -2.3, 0.2, 1])
-                            self.prevTimeCounter = 0
-                            self.respawned = True
+                    self.stateTracker.setState('TUNNEL')
+                    if self.respawned == False:
+                        self.spawnPosition([-4.2, -2.3, 0.2, 1])
+                        self.prevTimeCounter = 0
+                        self.respawned = True
 
                 
         elif(self.stateTracker.getState() == 'YODA'):
