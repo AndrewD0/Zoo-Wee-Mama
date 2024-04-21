@@ -8,7 +8,7 @@ from clueDetector import clue_Detector
 
 if __name__ == '__main__':
     rospy.init_node('MsgPublish', anonymous=True)
-    pub = rospy.Publisher("clue topic", String, queue_size=10)
+    pub = rospy.Publisher("clue_topic", String, queue_size=10)
     rate = rospy.Rate(10)
     clueBoard = clue_Detector()
     

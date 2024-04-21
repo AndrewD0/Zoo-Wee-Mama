@@ -87,7 +87,7 @@ class robotController:
         filtered = cv2.bitwise_and(blue_region, blue_region, mask=no_sky)
         boardHighlight = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)
         
-        #cv2.imshow("tunnel", boardHighlight)
+        cv2.imshow("tunnel", soilHighlight)
         # cv2.imshow("soil", soilHighlight)
         cv2.waitKey(2)
 

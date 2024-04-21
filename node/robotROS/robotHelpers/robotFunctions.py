@@ -139,6 +139,9 @@ def findGrassContours(mask):
             grassContours.append(contour)
         
     grassContours = sorted(grassContours, key = lambda c: cv2.boundingRect(c)[1])
+    finalMask = np.zeros_like(mask)
+    cv2.drawContours(finalMask, grassContours, -1 ,(255,255,255), thickness= cv2.FILLED)
+    cv2.imshow("filtered mask", finalMask)
     return grassContours
 
 def getValue(frame):
